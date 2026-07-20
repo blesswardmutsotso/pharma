@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Select-String -Pattern \"DB_\")",
+      "Bash(Test-NetConnection -ComputerName 187.77.180.143 -Port 3306 -InformationLevel Quiet -WarningAction SilentlyContinue)",
+      "Bash(timeout 5 bash -c \"echo >/dev/tcp/187.77.180.143/3306\")",
+      "Bash(timeout 3 bash -c \"echo >/dev/tcp/127.0.0.1/3306\")",
+      "Bash(timeout 3 bash -c \"echo >/dev/tcp/127.0.0.1/3307\")",
+      "Bash(timeout 3 bash -c \"echo >/dev/tcp/127.0.0.1/3308\")",
+      "Bash(php artisan *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/stock/manage)",
+      "Bash(grep -n \"Y-m-d\\\\\\\\\\\\\\\\TH:i:s\" c:/Dev/leaflightpos/leaflightpos/app/Http/Controllers/FiscalDeviceController.php)",
+      "Bash(php -r ' *)",
+      "Bash(php -l app/Http/Controllers/StockTransferController.php)",
+      "Bash(php -l app/Exports/StockImportTemplateExport.php)",
+      "Bash(php -l app/Models/StockAuditLog.php)",
+      "Bash(php -l app/Models/StockTransfer.php)",
+      "Bash(php -l app/Http/Controllers/UserController.php)",
+      "Bash(dir \"c:\\\\Dev\\\\leaflightpos\\\\leaflightpos\\\\bootstrap\")",
+      "Bash(netstat -ano)",
+      "Bash(sc query *)",
+      "Bash(ping -n 3 72.62.4.107)",
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName 72.62.4.107 -Port 3306 -InformationLevel Quiet 2>&1\")",
+      "Bash(powershell -Command \"\\(Invoke-WebRequest -Uri 'https://api.ipify.org' -UseBasicParsing\\).Content\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "PowerShell(php -r \"var_dump\\(defined\\('PDO::MYSQL_ATTR_CONNECT_TIMEOUT'\\)\\); \\\\$c = get_defined_constants\\(true\\); foreach\\(\\(\\\\$c['PDO'] ?? []\\) as \\\\$k => \\\\$v\\) { if\\(strpos\\(\\\\$k, 'MYSQL'\\) !== false\\) echo \\\\$k . ' = ' . \\\\$v . PHP_EOL; }\")",
+      "PowerShell(php -r \"foreach\\(array_keys\\(get_defined_constants\\(\\)\\) as $k\\) { if\\(strpos\\($k, 'MYSQL'\\) !== false\\) echo $k . PHP_EOL; }\" 2>&1 | Select-Object -First 30)",
+      "Bash(php -l app/Http/Controllers/SalesController.php)",
+      "PowerShell($f = \"$env:USERPROFILE\\\\Downloads\\\\flutter.zip\"; if \\(Test-Path $f\\) { $size = \\(Get-Item $f\\).Length; Write-Host \"flutter.zip exists — $\\([math]::Round\\($size/1MB, 1\\)\\) MB\" } else { Write-Host \"Not found yet\" })"
+    ]
+  }
+}
