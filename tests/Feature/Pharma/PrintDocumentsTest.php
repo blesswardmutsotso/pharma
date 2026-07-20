@@ -127,4 +127,27 @@ class PrintDocumentsTest extends TestCase
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_stock_adjustment_pdf_renders(): void
+    {
+        $this->actingAsAdmin();
+
+        $product = Stock::factory()->create(['product_code' => 'PDF-ADJ-1', 'quantity' => 10]);
+
+        $this->post('/stock-adjustments', [
+            'type' => \App\Models\StockAdjustment::TYPE_STOCK_TAKE,
+            'reason' => 'PDF export test',
+            'items' => [[
+                'product_code' => 'PDF-ADJ-1',
+                'product_description' => $product->product_description,
+                'qty_counted' => 8,
+            ]],
+        ]);
+
+        $adjustment = \App\Models\StockAdjustment::where('reason', 'PDF export test')->firstOrFail();
+
+        $response = $this->get("/stock-adjustments/{$adjustment->id}/pdf");
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
 }

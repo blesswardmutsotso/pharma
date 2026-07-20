@@ -69,6 +69,29 @@ class ERPModuleTest extends TestCase
         ]);
     }
 
+    public function test_supplier_can_be_created_with_license_and_accreditation_details(): void
+    {
+        $this->actingAsAuthenticatedUser();
+
+        $response = $this->post('/suppliers', [
+            'name' => 'Licensed Pharma Supplier',
+            'license_number' => 'MCAZ-WH-00456',
+            'license_expiry_date' => now()->addYear()->toDateString(),
+            'accreditation_body' => 'MCAZ',
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('suppliers', [
+            'name' => 'Licensed Pharma Supplier',
+            'license_number' => 'MCAZ-WH-00456',
+            'accreditation_body' => 'MCAZ',
+        ]);
+
+        $supplier = \App\Models\Supplier::where('name', 'Licensed Pharma Supplier')->firstOrFail();
+        $this->assertFalse($supplier->isLicenseExpired());
+    }
+
     public function test_supplier_can_be_edited_and_deactivated(): void
     {
         $this->actingAsAuthenticatedUser();

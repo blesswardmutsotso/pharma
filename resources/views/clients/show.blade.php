@@ -24,6 +24,17 @@
             <div><div class="label">VAT Number</div><div class="value">{{ $client->vat_number ?? '—' }}</div></div>
             <div><div class="label">TIN Number</div><div class="value">{{ $client->tin ?? '—' }}</div></div>
             <div><div class="label">Address</div><div class="value">{{ $client->fullAddress() ?: '—' }}</div></div>
+            <div>
+                <div class="label">Credit Limit</div>
+                <div class="value">
+                    @if ($client->credit_limit > 0)
+                        {{ number_format($client->credit_limit, 2) }}
+                        <span class="text-muted" style="font-size:.75rem;">(outstanding: {{ number_format($client->outstandingBalance(), 2) }})</span>
+                    @else
+                        No limit
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 

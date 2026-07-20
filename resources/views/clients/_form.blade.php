@@ -32,6 +32,10 @@
         <label class="form-label">TIN Number</label>
         <input type="text" name="tin" class="form-control" value="{{ $val('tin') }}" maxlength="10">
     </div>
+    <div class="col-md-4">
+        <label class="form-label">Credit Limit</label>
+        <input type="number" step="0.01" min="0" name="credit_limit" class="form-control" value="{{ $val('credit_limit') }}" placeholder="Leave blank for no limit">
+    </div>
 </div>
 
 <div class="form-section-title">Address</div>

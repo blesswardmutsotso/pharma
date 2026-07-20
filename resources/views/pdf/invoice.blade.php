@@ -23,7 +23,9 @@
 </head>
 <body>
 
-@if ($isDuplicate)
+@if ($invoice->status === \App\Models\SalesInvoice::STATUS_CANCELLED)
+    <div class="watermark">CANCELLED</div>
+@elseif ($isDuplicate)
     <div class="watermark">DUPLICATE</div>
 @endif
 
@@ -46,6 +48,7 @@
         <div><span class="label">Invoice Date:</span> {{ $invoice->invoice_date?->format('Y-m-d') }}</div>
         <div><span class="label">Due Date:</span> {{ $invoice->due_date?->format('Y-m-d') }}</div>
         <div><span class="label">Sales Order:</span> {{ $invoice->salesOrder?->so_number }}</div>
+        <div><span class="label">Fulfilling Branch:</span> {{ $invoice->salesOrder?->branch?->name ?? '—' }}</div>
     </div>
 </div>
 

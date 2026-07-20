@@ -177,14 +177,14 @@ class GoodsReceivedNoteController extends Controller implements HasMiddleware
 
     public function show(GoodsReceivedNote $goodsReceivedNote)
     {
-        $goodsReceivedNote->load(['supplier', 'purchaseOrder', 'items']);
+        $goodsReceivedNote->load(['supplier', 'purchaseOrder', 'items', 'branch']);
 
         return view('goods-received-notes.show', compact('goodsReceivedNote'));
     }
 
     public function pdf(Request $request, GoodsReceivedNote $goodsReceivedNote)
     {
-        $goodsReceivedNote->load(['supplier', 'purchaseOrder', 'items']);
+        $goodsReceivedNote->load(['supplier', 'purchaseOrder', 'items', 'branch']);
 
         $isDuplicate = $goodsReceivedNote->print_count > 0;
         $goodsReceivedNote->increment('print_count');

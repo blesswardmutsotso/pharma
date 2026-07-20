@@ -71,6 +71,7 @@ class ClientController extends Controller implements HasMiddleware
             'tin'            => 'nullable|string|max:10',
             'phone'          => 'nullable|string|max:20',
             'email'          => 'nullable|email|max:255',
+            'credit_limit'   => 'nullable|numeric|min:0',
             'province'       => 'nullable|string|max:100',
             'city'           => 'nullable|string|max:100',
             'district'       => 'nullable|string|max:100',

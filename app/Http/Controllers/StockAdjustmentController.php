@@ -118,6 +118,19 @@ class StockAdjustmentController extends Controller implements HasMiddleware
         return view('stock-adjustments.show', ['adjustment' => $stockAdjustment]);
     }
 
+    public function pdf(Request $request, StockAdjustment $stockAdjustment)
+    {
+        $stockAdjustment->load(['items', 'branch', 'approvedBy']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.stock-adjustment', [
+            'adjustment' => $stockAdjustment,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = "{$stockAdjustment->adjustment_no}.pdf";
+
+        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
+    }
+
     public function approve(StockAdjustment $stockAdjustment)
     {
         if (!$stockAdjustment->canBeApproved()) {

@@ -118,6 +118,59 @@ class SalesOrderFefoTest extends TestCase
         $this->assertSame(0, $so->items()->first()->qty_allocated);
     }
 
+    public function test_confirming_a_sales_order_is_blocked_when_it_would_exceed_the_clients_credit_limit(): void
+    {
+        $this->actingAsAuthenticatedUser();
+        $client = \App\Models\Client::create(['name' => 'Credit Limited Client', 'credit_limit' => 100]);
+
+        // Existing unpaid invoice already uses up most of the limit.
+        $existingSo = SalesOrder::create([
+            'so_number' => 'SO-CREDIT-EXISTING',
+            'client_id' => $client->id,
+            'order_date' => now()->toDateString(),
+            'status' => SalesOrder::STATUS_INVOICED,
+        ]);
+        \App\Models\SalesInvoice::create([
+            'invoice_number' => 'INV-CREDIT-EXISTING',
+            'sales_order_id' => $existingSo->id,
+            'client_id' => $client->id,
+            'invoice_date' => now()->toDateString(),
+            'due_date' => now()->addDays(30)->toDateString(),
+            'status' => \App\Models\SalesInvoice::STATUS_UNPAID,
+            'subtotal' => 80, 'tax_total' => 0, 'total' => 80,
+        ]);
+
+        Stock::factory()->create(['product_code' => 'PRD-SO-CREDIT', 'quantity' => 0]);
+        StockBatch::create([
+            'product_code' => 'PRD-SO-CREDIT',
+            'batch_number' => 'CREDIT-BATCH',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 50,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
+
+        // New order worth 30 would push total exposure to 110, over the 100 limit.
+        $this->post('/sales-orders', [
+            'so_number' => 'SO-CREDIT-NEW',
+            'client_id' => $client->id,
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'PRD-SO-CREDIT',
+                'product_description' => 'Test Product',
+                'qty_ordered' => 10,
+                'unit_price' => 3,
+            ]],
+        ]);
+        $so = SalesOrder::where('so_number', 'SO-CREDIT-NEW')->firstOrFail();
+
+        $response = $this->post("/sales-orders/{$so->id}/confirm");
+
+        $response->assertRedirect();
+        $this->assertSame(SalesOrder::STATUS_DRAFT, $so->fresh()->status);
+        $this->assertStringContainsString('credit limit', session('error'));
+    }
+
     public function test_dispatch_reduces_batch_and_aggregate_stock_and_logs_sale(): void
     {
         $this->actingAsAuthenticatedUser();

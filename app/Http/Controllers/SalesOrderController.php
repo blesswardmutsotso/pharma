@@ -89,7 +89,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     public function show(SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'items.batchAllocations.stockBatch']);
+        $salesOrder->load(['client', 'branch', 'items.batchAllocations.stockBatch']);
 
         return view('sales-orders.show', compact('salesOrder'));
     }
@@ -98,6 +98,19 @@ class SalesOrderController extends Controller implements HasMiddleware
     {
         if (!$salesOrder->canBeConfirmed()) {
             return back()->with('error', 'Only draft sales orders can be confirmed.');
+        }
+
+        $client = $salesOrder->client;
+        $orderValue = (float) $salesOrder->items->sum('line_total');
+
+        if ($client && $client->wouldExceedCreditLimit($orderValue)) {
+            return back()->with('error', sprintf(
+                'Cannot confirm: %s would exceed their credit limit (outstanding %s + this order %s > limit %s).',
+                $client->name,
+                number_format($client->outstandingBalance(), 2),
+                number_format($orderValue, 2),
+                number_format((float) $client->credit_limit, 2),
+            ));
         }
 
         try {
@@ -132,7 +145,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     public function pickingList(SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'items.batchAllocations.stockBatch']);
+        $salesOrder->load(['client', 'branch', 'items.batchAllocations.stockBatch']);
 
         return view('sales-orders.picking-list', compact('salesOrder'));
     }

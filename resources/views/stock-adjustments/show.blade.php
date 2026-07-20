@@ -10,7 +10,10 @@
             <h4><i class="bi bi-clipboard-data me-2 text-success"></i>Adjustment {{ $adjustment->adjustment_no }}</h4>
             <div class="sub"><span class="badge-status {{ $adjustment->statusBadgeClass() }}">{{ ucfirst($adjustment->status) }}</span> · {{ $adjustment->typeLabel() }}</div>
         </div>
-        <a href="{{ route('stock-adjustments.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('stock-adjustments.pdf', $adjustment) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Print PDF</a>
+            <a href="{{ route('stock-adjustments.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        </div>
     </div>
 
     <div class="detail-card">

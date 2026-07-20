@@ -29,6 +29,15 @@
             <div><div class="label">Phone</div><div class="value">{{ $supplier->phone ?? '—' }}</div></div>
             <div><div class="label">Email</div><div class="value">{{ $supplier->email ?? '—' }}</div></div>
             <div><div class="label">TIN</div><div class="value">{{ $supplier->tin ?? '—' }}</div></div>
+            <div><div class="label">License Number</div><div class="value">{{ $supplier->license_number ?? '—' }}</div></div>
+            <div>
+                <div class="label">License Expiry</div>
+                <div class="value {{ $supplier->isLicenseExpired() ? 'text-danger' : '' }}">
+                    {{ $supplier->license_expiry_date?->format('Y-m-d') ?? '—' }}
+                    @if ($supplier->isLicenseExpired()) (Expired) @endif
+                </div>
+            </div>
+            <div><div class="label">Accreditation Body</div><div class="value">{{ $supplier->accreditation_body ?? '—' }}</div></div>
             <div><div class="label">Address</div><div class="value">{{ $supplier->address ?? '—' }}</div></div>
             <div><div class="label">Payment Terms</div><div class="value">{{ $supplier->payment_terms ?? '—' }}</div></div>
         </div>

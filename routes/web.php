@@ -94,6 +94,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
 
     // ── Stock Adjustments (stock-take / damage / theft / breakage) ──
     Route::resource('stock-adjustments', StockAdjustmentController::class)->only(['index', 'create', 'store', 'show']);
+    Route::get('/stock-adjustments/{stockAdjustment}/pdf', [StockAdjustmentController::class, 'pdf'])->name('stock-adjustments.pdf');
     Route::post('/stock-adjustments/{stockAdjustment}/approve', [StockAdjustmentController::class, 'approve'])->name('stock-adjustments.approve');
     Route::post('/stock-adjustments/{stockAdjustment}/reject',  [StockAdjustmentController::class, 'reject'])->name('stock-adjustments.reject');
 

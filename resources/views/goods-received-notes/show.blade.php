@@ -30,6 +30,7 @@
                     @endif
                 </div>
             </div>
+            <div><div class="label">Receiving Branch</div><div class="value">{{ $goodsReceivedNote->branch?->name ?? '—' }}</div></div>
         </div>
     </div>
 

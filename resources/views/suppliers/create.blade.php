@@ -36,6 +36,18 @@
                 <label class="form-label">TIN</label>
                 <input type="text" name="tin" class="form-control" value="{{ old('tin') }}">
             </div>
+            <div class="col-md-4">
+                <label class="form-label">License Number</label>
+                <input type="text" name="license_number" class="form-control" value="{{ old('license_number') }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">License Expiry Date</label>
+                <input type="date" name="license_expiry_date" class="form-control" value="{{ old('license_expiry_date') }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Accreditation Body</label>
+                <input type="text" name="accreditation_body" class="form-control" value="{{ old('accreditation_body') }}" placeholder="e.g. MCAZ">
+            </div>
             <div class="col-md-6">
                 <label class="form-label">Address</label>
                 <input type="text" name="address" class="form-control" value="{{ old('address') }}">

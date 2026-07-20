@@ -25,7 +25,7 @@ class SalesInvoiceController extends Controller
 
     public function pdf(Request $request, SalesInvoice $salesInvoice)
     {
-        $salesInvoice->load(['client', 'items', 'salesOrder']);
+        $salesInvoice->load(['client', 'items', 'salesOrder.branch']);
 
         $isDuplicate = $salesInvoice->print_count > 0;
         $salesInvoice->increment('print_count');
