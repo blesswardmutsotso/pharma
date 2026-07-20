@@ -285,24 +285,23 @@
 
 <div class="finance-canvas" id="canvas"></div>
 
+@php
+    $tickerItems = array_filter([
+        config('company.name') ? strtoupper(config('company.name')) : null,
+        'PHARMACEUTICAL WHOLESALE DISTRIBUTOR',
+        config('company.tin') ? 'TIN ' . config('company.tin') : null,
+        config('company.vendor_number') ? 'VENDOR NO. ' . config('company.vendor_number') : null,
+        config('company.address') ? strtoupper(config('company.address')) : null,
+        config('company.phone_sales') ? 'SALES ' . config('company.phone_sales') : null,
+    ]);
+@endphp
 <div class="ticker-wrap">
     <div class="ticker-tape">
-        <span class="up">VAT ▲ 15.0%</span><span class="sep">  ·  </span>
-        <span class="up">CORP TAX ▲ 24.72%</span><span class="sep">  ·  </span>
-        <span class="down">PAYE ▼ 0.12%</span><span class="sep">  ·  </span>
-        <span class="up">ZWL/USD ▲ 361.90</span><span class="sep">  ·  </span>
-        <span class="up">REVENUE ▲ +8.4%</span><span class="sep">  ·  </span>
-        <span class="down">DEFICIT ▼ 2.1%</span><span class="sep">  ·  </span>
-        <span class="up">COMPLIANCE 98.6%</span><span class="sep">  ·  </span>
-        <span class="up">LEAFLIGHT v2.4 ●</span><span class="sep">  ·  </span>
-        <span class="up">VAT ▲ 15.0%</span><span class="sep">  ·  </span>
-        <span class="up">CORP TAX ▲ 24.72%</span><span class="sep">  ·  </span>
-        <span class="down">PAYE ▼ 0.12%</span><span class="sep">  ·  </span>
-        <span class="up">ZWL/USD ▲ 361.90</span><span class="sep">  ·  </span>
-        <span class="up">REVENUE ▲ +8.4%</span><span class="sep">  ·  </span>
-        <span class="down">DEFICIT ▼ 2.1%</span><span class="sep">  ·  </span>
-        <span class="up">COMPLIANCE 98.6%</span><span class="sep">  ·  </span>
-        <span class="up">LEAFLIGHT v2.4 ●</span><span class="sep">  ·  </span>
+        @for ($i = 0; $i < 2; $i++)
+            @foreach ($tickerItems as $item)
+                <span class="up">{{ $item }}</span><span class="sep">  ·  </span>
+            @endforeach
+        @endfor
     </div>
 </div>
 
@@ -330,16 +329,20 @@
         <div class="login-container">
             <div class="card-glow"></div>
 
+            @if (config('company.tin'))
             <div class="stat-chip left">
-                <div class="chip-label">TAX COLLECTED</div>
-                <div class="chip-val">$4.28M</div>
-                <div class="chip-delta">▲ 12.4% this month</div>
+                <div class="chip-label">TIN</div>
+                <div class="chip-val">{{ config('company.tin') }}</div>
+                <div class="chip-delta">Registered Taxpayer</div>
             </div>
+            @endif
+            @if (config('company.vendor_number'))
             <div class="stat-chip right">
-                <div class="chip-label">COMPLIANCE</div>
-                <div class="chip-val">98.6%</div>
-                <div class="chip-delta">▲ 0.3% vs last yr</div>
+                <div class="chip-label">VENDOR NO.</div>
+                <div class="chip-val">{{ config('company.vendor_number') }}</div>
+                <div class="chip-delta">Wholesale Distributor</div>
             </div>
+            @endif
 
             <div class="login-card">
 
@@ -565,7 +568,7 @@
 
 <script>
 /* ── floating symbols ── */
-const symbols = ['$','%','£','€','¢','TAX','VAT','PAYE','ROI','▲','▼','◆','12%','15%','24%','+4.2','-0.8','+12.4','2,450','18,900'];
+const symbols = ['℞','mg','ml','+','Rx','FEFO','GDP','QA','℃','●','◆','▲','500mg','10x10','Batch','Lot'];
 const canvas  = document.getElementById('canvas');
 for (let i = 0; i < 30; i++) {
     const el = document.createElement('div');
