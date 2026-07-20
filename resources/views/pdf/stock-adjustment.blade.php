@@ -22,7 +22,10 @@
 <body>
 
 <div class="header">
-    <div class="company">LeafLight Pharma Wholesale</div>
+    <div>
+        <div class="company">{{ config('company.name') }}</div>
+        <div style="font-size:9px;color:#6c757d;">{{ config('company.address') }}</div>
+    </div>
     <div>
         <div class="doc-title">STOCK ADJUSTMENT</div>
         <div class="doc-number">{{ $adjustment->adjustment_no }}</div>

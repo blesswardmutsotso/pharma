@@ -30,7 +30,14 @@
 @endif
 
 <div class="header">
-    <div class="company">LeafLight Pharma Wholesale</div>
+    <div>
+        <div class="company">{{ config('company.name') }}</div>
+        <div style="font-size:9px;color:#6c757d;">
+            {{ config('company.address') }}
+            @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
+            @if (config('company.vendor_number')) &nbsp;·&nbsp; Vendor No: {{ config('company.vendor_number') }} @endif
+        </div>
+    </div>
     <div>
         <div class="doc-title">TAX INVOICE</div>
         <div class="doc-number">{{ $invoice->invoice_number }}</div>
@@ -84,6 +91,15 @@
         <tr><td colspan="6" class="text-end">Balance Due</td><td class="text-end">{{ number_format($invoice->balance(), 2) }}</td></tr>
     </tfoot>
 </table>
+
+@if (config('company.bank_name'))
+    <div style="margin-top:15px;font-size:10px;">
+        <strong>Payment Details</strong><br>
+        Bank: {{ config('company.bank_name') }} &nbsp;·&nbsp;
+        Account Name: {{ config('company.bank_account_name') }} &nbsp;·&nbsp;
+        Account Number: {{ config('company.bank_account_number') }}
+    </div>
+@endif
 
 <div class="qr">
     <img src="{{ $qrImage }}" width="90" height="90">

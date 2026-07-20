@@ -26,7 +26,13 @@
 @endif
 
 <div class="header">
-    <div class="company">LeafLight Pharma Wholesale</div>
+    <div>
+        <div class="company">{{ config('company.name') }}</div>
+        <div style="font-size:9px;color:#6c757d;">
+            {{ config('company.address') }}
+            @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
+        </div>
+    </div>
     <div>
         <div class="doc-title">QUOTATION</div>
         <div class="doc-number">{{ $quotation->quote_number }}</div>

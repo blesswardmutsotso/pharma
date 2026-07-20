@@ -310,12 +310,15 @@
 
     <!-- ══ HEADER ══ -->
     <header>
+        @php
+            $companyNameParts = explode(' ', config('company.name'), 2);
+        @endphp
         <a class="header-brand" href="#">
-            <div class="header-logo-box"><img src="{{ asset('logo.png') }}" alt="Leaf Light" style="width:40px;height:40px;object-fit:contain;"></div>
-            <span class="header-name">Leaf Light <span>Systems</span></span>
+            <div class="header-logo-box"><img src="{{ asset('logo.png') }}" alt="{{ config('company.name') }}" style="width:40px;height:40px;object-fit:contain;"></div>
+            <span class="header-name">{{ $companyNameParts[0] }} <span>{{ $companyNameParts[1] ?? '' }}</span></span>
         </a>
         <div class="header-right">
-            <span class="header-tagline">Fiscal Management System</span>
+            <span class="header-tagline">Pharmaceutical Wholesale ERP</span>
             <span class="header-badge">
                 <span class="live-dot"></span> Live
             </span>
@@ -346,10 +349,10 @@
 
                 <div class="card-header">
                     <div class="card-logo-wrap">
-                        <div class="card-logo"><img src="{{ asset('logo.png') }}" alt="Leaf Light" style="width:88px;height:88px;object-fit:contain;"></div>
+                        <div class="card-logo"><img src="{{ asset('logo.png') }}" alt="{{ config('company.name') }}" style="width:88px;height:88px;object-fit:contain;"></div>
                     </div>
                     <div class="card-title">Welcome back</div>
-                    <div class="card-subtitle">Sign in to your Leaf Light Systems account</div>
+                    <div class="card-subtitle">Sign in to your {{ config('company.name') }} account</div>
                 </div>
 
                 <form method="POST" action="{{ route('login') }}">
@@ -392,7 +395,16 @@
     <!-- ══ FOOTER ══ -->
     <footer>
         <div class="footer-left">
-            &copy; <strong>Leaf Light Systems</strong> {{ date('Y') }}. All rights reserved.
+            &copy; <strong>{{ config('company.name') }}</strong> {{ date('Y') }}. All rights reserved.
+            @if (config('company.address'))
+                <span class="d-none d-md-inline"> &nbsp;·&nbsp; {{ config('company.address') }}</span>
+            @endif
+            @if (config('company.phone_sales'))
+                <span class="d-none d-md-inline"> &nbsp;·&nbsp; {{ config('company.phone_sales') }}</span>
+            @endif
+            @if (config('company.email_sales'))
+                <span class="d-none d-md-inline"> &nbsp;·&nbsp; {{ config('company.email_sales') }}</span>
+            @endif
         </div>
         <div class="footer-center">
             <a href="{{ route('privacy') }}">Privacy Policy</a>
