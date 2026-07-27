@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Pharma;
 
+use App\Models\Client;
+use App\Models\Quotation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -381,5 +383,29 @@ class ERPModuleTest extends TestCase
             'reference_id' => $transfer->id,
             'action' => \App\Models\StockAuditLog::TRANSFER_OUT,
         ]);
+    }
+
+    public function test_quotation_number_is_auto_generated_and_increments(): void
+    {
+        $this->actingAsAuthenticatedUser();
+        $client = Client::create(['name' => 'Auto Quote Client']);
+
+        $payload = fn () => [
+            'client_id' => $client->id,
+            'quote_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'AUTOQ-1',
+                'product_description' => 'Test Product',
+                'qty' => 1,
+                'unit_price' => 10,
+            ]],
+        ];
+
+        $this->post('/quotations', $payload())->assertRedirect();
+        $this->post('/quotations', $payload())->assertRedirect();
+
+        $numbers = Quotation::orderBy('id')->pluck('quote_number')->all();
+
+        $this->assertSame(['Qu0001', 'Qu0002'], $numbers);
     }
 }

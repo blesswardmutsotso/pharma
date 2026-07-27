@@ -16,11 +16,7 @@
         @csrf
 
         <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">Quote Number</label>
-                <input type="text" name="quote_number" class="form-control" value="{{ old('quote_number') }}" required>
-            </div>
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <label class="form-label d-flex justify-content-between">
                     <span>Client</span>
                     <a href="{{ route('clients.create') }}" target="_blank" class="text-success" style="font-size:.75rem;"><i class="bi bi-plus-circle me-1"></i>New Client</a>
@@ -31,15 +27,16 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label">Quote Date</label>
                 <input type="date" name="quote_date" class="form-control" value="{{ now()->toDateString() }}" required>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label">Valid Until</label>
                 <input type="date" name="valid_until" class="form-control">
             </div>
         </div>
+        <div class="form-text mt-1">Quote number is generated automatically on save (e.g. Qu0001).</div>
 
         <div class="form-section-title">Line Items</div>
         <div class="table-responsive">

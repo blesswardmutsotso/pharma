@@ -37,7 +37,6 @@ class QuotationController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'quote_number' => ['required', 'string', 'max:100', 'unique:quotations,quote_number'],
             'client_id' => ['required', 'exists:clients,id'],
             'quote_date' => ['required', 'date'],
             'valid_until' => ['nullable', 'date'],
@@ -52,7 +51,7 @@ class QuotationController extends Controller implements HasMiddleware
 
         DB::transaction(function () use ($validated) {
             $quotation = Quotation::create([
-                'quote_number' => $validated['quote_number'],
+                'quote_number' => Quotation::generateQuoteNumber(),
                 'client_id' => $validated['client_id'],
                 'quote_date' => $validated['quote_date'],
                 'valid_until' => $validated['valid_until'] ?? null,

@@ -53,10 +53,10 @@ class Quotation extends Model
 
     public static function generateQuoteNumber(): string
     {
-        $prefix = 'QUO-' . now()->format('Ymd') . '-';
-        $todayCount = static::where('quote_number', 'LIKE', $prefix . '%')->count() + 1;
+        $prefix = 'Qu';
+        $count = static::where('quote_number', 'LIKE', $prefix . '%')->count() + 1;
 
-        return $prefix . str_pad($todayCount, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 
     public function canBeConverted(): bool
