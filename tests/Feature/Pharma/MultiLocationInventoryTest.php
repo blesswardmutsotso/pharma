@@ -97,7 +97,6 @@ class MultiLocationInventoryTest extends TestCase
 
         // ...but this order is fulfilled from Mutare, which has none.
         $this->post('/sales-orders', [
-            'so_number' => 'SO-ML-1',
             'client_id' => $client->id,
             'branch_id' => $mutare->id,
             'order_date' => now()->toDateString(),
@@ -109,7 +108,7 @@ class MultiLocationInventoryTest extends TestCase
             ]],
         ]);
 
-        $so = SalesOrder::where('so_number', 'SO-ML-1')->firstOrFail();
+        $so = SalesOrder::latest('id')->firstOrFail();
         $response = $this->post("/sales-orders/{$so->id}/confirm");
 
         $response->assertRedirect();

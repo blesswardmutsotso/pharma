@@ -38,7 +38,6 @@ class SalesOrderFefoTest extends TestCase
     protected function createSalesOrder(Client $client, string $productCode, int $qty): SalesOrder
     {
         $this->post('/sales-orders', [
-            'so_number' => 'SO-TEST-0001',
             'client_id' => $client->id,
             'order_date' => now()->toDateString(),
             'items' => [
@@ -51,7 +50,7 @@ class SalesOrderFefoTest extends TestCase
             ],
         ]);
 
-        return SalesOrder::where('so_number', 'SO-TEST-0001')->firstOrFail();
+        return SalesOrder::latest('id')->firstOrFail();
     }
 
     public function test_confirming_a_sales_order_allocates_stock_fefo_across_batches(): void
@@ -152,7 +151,6 @@ class SalesOrderFefoTest extends TestCase
 
         // New order worth 30 would push total exposure to 110, over the 100 limit.
         $this->post('/sales-orders', [
-            'so_number' => 'SO-CREDIT-NEW',
             'client_id' => $client->id,
             'order_date' => now()->toDateString(),
             'items' => [[
@@ -162,7 +160,7 @@ class SalesOrderFefoTest extends TestCase
                 'unit_price' => 3,
             ]],
         ]);
-        $so = SalesOrder::where('so_number', 'SO-CREDIT-NEW')->firstOrFail();
+        $so = SalesOrder::latest('id')->firstOrFail();
 
         $response = $this->post("/sales-orders/{$so->id}/confirm");
 

@@ -16,11 +16,7 @@
         @csrf
 
         <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">SO Number</label>
-                <input type="text" name="so_number" class="form-control" value="{{ old('so_number') }}" required>
-            </div>
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <label class="form-label d-flex justify-content-between">
                     <span>Client</span>
                     <a href="{{ route('clients.create') }}" target="_blank" class="text-success" style="font-size:.75rem;"><i class="bi bi-plus-circle me-1"></i>New Client</a>
@@ -39,7 +35,7 @@
                 <label class="form-label">Required Date</label>
                 <input type="date" name="required_date" class="form-control">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">Fulfilling Branch / Warehouse</label>
                 <select name="branch_id" class="form-select">
                     @foreach ($branches as $branch)
@@ -48,6 +44,7 @@
                 </select>
             </div>
         </div>
+        <div class="form-text mt-1">SO number is generated automatically on save.</div>
 
         <div class="form-section-title">Line Items</div>
         <div class="table-responsive">

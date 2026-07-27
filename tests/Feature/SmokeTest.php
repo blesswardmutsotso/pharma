@@ -163,7 +163,6 @@ class SmokeTest extends TestCase
         $this->post("/quotations/{$quotation->id}/convert");
 
         $this->post('/sales-orders', [
-            'so_number' => 'SO-SMOKE-1',
             'client_id' => $client->id,
             'order_date' => now()->toDateString(),
             'items' => [[
@@ -173,7 +172,7 @@ class SmokeTest extends TestCase
                 'unit_price' => 3.00,
             ]],
         ]);
-        $so = SalesOrder::where('so_number', 'SO-SMOKE-1')->firstOrFail();
+        $so = SalesOrder::latest('id')->firstOrFail();
         $this->get("/sales-orders/{$so->id}")->assertOk();
         $this->post("/sales-orders/{$so->id}/confirm");
         $this->get("/sales-orders/{$so->id}")->assertOk();

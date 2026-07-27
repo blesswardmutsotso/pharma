@@ -106,7 +106,6 @@ class PrintDocumentsTest extends TestCase
         ]);
 
         $this->post('/sales-orders', [
-            'so_number' => 'SO-PDF-1',
             'client_id' => $client->id,
             'order_date' => now()->toDateString(),
             'items' => [[
@@ -116,7 +115,7 @@ class PrintDocumentsTest extends TestCase
                 'unit_price' => 4,
             ]],
         ]);
-        $so = SalesOrder::where('so_number', 'SO-PDF-1')->firstOrFail();
+        $so = SalesOrder::latest('id')->firstOrFail();
         $this->post("/sales-orders/{$so->id}/confirm");
         $this->post("/sales-orders/{$so->id}/start-picking");
         $this->post("/sales-orders/{$so->id}/dispatch");

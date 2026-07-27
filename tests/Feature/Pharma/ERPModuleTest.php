@@ -408,4 +408,30 @@ class ERPModuleTest extends TestCase
 
         $this->assertSame(['Qu0001', 'Qu0002'], $numbers);
     }
+
+    public function test_sales_order_number_is_auto_generated_and_unique(): void
+    {
+        $this->actingAsAuthenticatedUser();
+        $client = Client::create(['name' => 'Auto SO Client']);
+
+        $payload = fn () => [
+            'client_id' => $client->id,
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'AUTOSO-1',
+                'product_description' => 'Test Product',
+                'qty_ordered' => 1,
+                'unit_price' => 10,
+            ]],
+        ];
+
+        $this->post('/sales-orders', $payload())->assertRedirect();
+        $this->post('/sales-orders', $payload())->assertRedirect();
+
+        $numbers = \App\Models\SalesOrder::orderBy('id')->pluck('so_number')->all();
+
+        $this->assertCount(2, $numbers);
+        $this->assertNotSame($numbers[0], $numbers[1]);
+        $this->assertMatchesRegularExpression('/^SO-\d{8}-\d{4}$/', $numbers[0]);
+    }
 }

@@ -70,7 +70,6 @@ class RoleAccessControlTest extends TestCase
         $client = Client::create(['name' => 'RBAC Client']);
 
         $response = $this->post('/sales-orders', [
-            'so_number' => 'SO-RBAC-1',
             'client_id' => $client->id,
             'order_date' => now()->toDateString(),
             'items' => [[
@@ -82,7 +81,7 @@ class RoleAccessControlTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        $this->assertDatabaseHas('sales_orders', ['so_number' => 'SO-RBAC-1']);
+        $this->assertDatabaseHas('sales_orders', ['client_id' => $client->id]);
     }
 
     public function test_sales_user_cannot_record_a_payment(): void

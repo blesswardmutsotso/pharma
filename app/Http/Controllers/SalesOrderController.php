@@ -45,7 +45,6 @@ class SalesOrderController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'so_number' => ['required', 'string', 'max:100', 'unique:sales_orders,so_number'],
             'client_id' => ['required', 'exists:clients,id'],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'order_date' => ['required', 'date'],
@@ -60,7 +59,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
         DB::transaction(function () use ($validated) {
             $salesOrder = SalesOrder::create([
-                'so_number' => $validated['so_number'],
+                'so_number' => SalesOrder::generateSoNumber(),
                 'client_id' => $validated['client_id'],
                 'branch_id' => $validated['branch_id'] ?? null,
                 'order_date' => $validated['order_date'],
