@@ -28,54 +28,64 @@
         @endif
     </form>
 
-    <div class="table-card">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Contact Person</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>VAT / TIN</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($clients as $client)
-                        <tr>
-                            <td class="fw-semibold">{{ $client->name }}</td>
-                            <td>{{ $client->contact_person ?? '—' }}</td>
-                            <td>{{ $client->phone ?? '—' }}</td>
-                            <td>{{ $client->email ?? '—' }}</td>
-                            <td>{{ $client->vat_number ?? '—' }} / {{ $client->tin ?? '—' }}</td>
-                            <td class="text-center">
-                                <a class="btn-action" href="{{ route('clients.show', $client) }}" title="View"><i class="bi bi-eye"></i></a>
-                                <a class="btn-action" href="{{ route('clients.edit', $client) }}" title="Edit"><i class="bi bi-pencil"></i></a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6">
-                                <div class="empty-state">
-                                    <i class="bi bi-people"></i>
-                                    <p>No clients found{{ request()->hasAny(['search']) ? ' matching your search' : '' }}.<br>
-                                    <a href="{{ route('clients.create') }}" class="text-success fw-semibold">Add the first client</a></p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <form method="POST" action="{{ route('clients.export') }}">
+        @csrf
+        <x-forward-filters />
 
-        @if($clients->hasPages())
-        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light" style="font-size:.8rem;">
-            <span class="text-muted">Showing {{ $clients->firstItem() }}–{{ $clients->lastItem() }} of {{ $clients->total() }} clients</span>
-            {{ $clients->withQueryString()->links('pagination::bootstrap-5') }}
+        <div class="table-card">
+            <div class="d-flex justify-content-end p-2 border-bottom">
+                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-download me-1"></i>Export CSV</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;"><input type="checkbox" class="select-all-checkbox form-check-input"></th>
+                            <x-sortable-th field="name">Name</x-sortable-th>
+                            <x-sortable-th field="contact_person">Contact Person</x-sortable-th>
+                            <x-sortable-th field="phone">Phone</x-sortable-th>
+                            <x-sortable-th field="email">Email</x-sortable-th>
+                            <th>VAT / TIN</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($clients as $client)
+                            <tr>
+                                <td><input type="checkbox" name="ids[]" value="{{ $client->id }}" class="row-checkbox form-check-input"></td>
+                                <td class="fw-semibold">{{ $client->name }}</td>
+                                <td>{{ $client->contact_person ?? '—' }}</td>
+                                <td>{{ $client->phone ?? '—' }}</td>
+                                <td>{{ $client->email ?? '—' }}</td>
+                                <td>{{ $client->vat_number ?? '—' }} / {{ $client->tin ?? '—' }}</td>
+                                <td class="text-center">
+                                    <a class="btn-action" href="{{ route('clients.show', $client) }}" title="View"><i class="bi bi-eye"></i></a>
+                                    <a class="btn-action" href="{{ route('clients.edit', $client) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="bi bi-people"></i>
+                                        <p>No clients found{{ request()->hasAny(['search']) ? ' matching your search' : '' }}.<br>
+                                        <a href="{{ route('clients.create') }}" class="text-success fw-semibold">Add the first client</a></p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($clients->hasPages())
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light" style="font-size:.8rem;">
+                <span class="text-muted">Showing {{ $clients->firstItem() }}–{{ $clients->lastItem() }} of {{ $clients->total() }} clients</span>
+                {{ $clients->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+            @endif
         </div>
-        @endif
-    </div>
+    </form>
 
 </div>
 @endsection

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Client;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
@@ -14,17 +16,62 @@ use Illuminate\Support\Facades\DB;
 
 class QuotationController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['quote_number', 'quote_date', 'status'];
+
     public static function middleware(): array
     {
         return [
             new Middleware('role:admin,manager,sales', only: ['create', 'store', 'convert']),
         ];
     }
-    public function index()
+
+    private function filteredQuotationsQuery(Request $request)
     {
-        $quotations = Quotation::with('client')->latest()->paginate(20);
+        $query = Quotation::with('client');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('quote_number', 'like', "%{$search}%")
+                  ->orWhereHas('client', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredQuotationsQuery($request);
+        $quotations = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'quote_date', 'desc')
+            ->paginate(20)->withQueryString();
 
         return view('quotations.index', compact('quotations'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? Quotation::with('client')->whereIn('id', $request->input('ids'))
+            : $this->filteredQuotationsQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'quote_date', 'desc')
+            ->get()
+            ->map(fn (Quotation $q) => [
+                'number' => $q->quote_number,
+                'client' => $q->client?->name,
+                'date' => $q->quote_date?->format('Y-m-d'),
+                'status' => ucfirst($q->status),
+            ]);
+
+        return $this->streamCsvExport('quotations-' . now()->format('Ymd_His') . '.csv', [
+            'number' => 'Quote Number', 'client' => 'Client', 'date' => 'Quote Date', 'status' => 'Status',
+        ], $rows);
     }
 
     public function create()

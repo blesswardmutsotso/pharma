@@ -28,54 +28,64 @@
         @endif
     </form>
 
-    <div class="table-card">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>IP Address</th>
-                        <th>User Agent</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($logs as $log)
-                        <tr>
-                            <td style="white-space:nowrap;">
-                                {{ $log->created_at->format('Y-m-d H:i:s') }}
-                            </td>
-                            <td>{{ $log->user_name ?? '—' }}</td>
-                            <td>
-                                <span class="badge-status badge-{{ $log->action === 'failed_login' ? 'rejected' : ($log->action === 'login' ? 'approved' : 'pending') }}">
-                                    {{ $log->actionLabel() }}
-                                </span>
-                            </td>
-                            <td>{{ $log->ip_address ?? '—' }}</td>
-                            <td class="text-muted" style="font-size:.78rem;">{{ Str::limit($log->user_agent, 60) }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5">
-                                <div class="empty-state">
-                                    <i class="bi bi-clock-history"></i>
-                                    <p>No activity logged yet{{ request()->hasAny(['action', 'user', 'from', 'to']) ? ' matching your filters' : '' }}.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <form method="POST" action="{{ route('user-activity-logs.export') }}">
+        @csrf
+        <x-forward-filters />
 
-        @if ($logs->hasPages())
-        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light" style="font-size:.8rem;">
-            <span class="text-muted">Showing {{ $logs->firstItem() }}–{{ $logs->lastItem() }} of {{ $logs->total() }} entries</span>
-            {{ $logs->withQueryString()->links('pagination::bootstrap-5') }}
+        <div class="table-card">
+            <div class="d-flex justify-content-end p-2 border-bottom">
+                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-download me-1"></i>Export CSV</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;"><input type="checkbox" class="select-all-checkbox form-check-input"></th>
+                            <x-sortable-th field="created_at">Time</x-sortable-th>
+                            <x-sortable-th field="user_name">User</x-sortable-th>
+                            <x-sortable-th field="action">Action</x-sortable-th>
+                            <x-sortable-th field="ip_address">IP Address</x-sortable-th>
+                            <th>User Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($logs as $log)
+                            <tr>
+                                <td><input type="checkbox" name="ids[]" value="{{ $log->id }}" class="row-checkbox form-check-input"></td>
+                                <td style="white-space:nowrap;">
+                                    {{ $log->created_at->format('Y-m-d H:i:s') }}
+                                </td>
+                                <td>{{ $log->user_name ?? '—' }}</td>
+                                <td>
+                                    <span class="badge-status badge-{{ $log->action === 'failed_login' ? 'rejected' : ($log->action === 'login' ? 'approved' : 'pending') }}">
+                                        {{ $log->actionLabel() }}
+                                    </span>
+                                </td>
+                                <td>{{ $log->ip_address ?? '—' }}</td>
+                                <td class="text-muted" style="font-size:.78rem;">{{ Str::limit($log->user_agent, 60) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="bi bi-clock-history"></i>
+                                        <p>No activity logged yet{{ request()->hasAny(['action', 'user', 'from', 'to']) ? ' matching your filters' : '' }}.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($logs->hasPages())
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light" style="font-size:.8rem;">
+                <span class="text-muted">Showing {{ $logs->firstItem() }}–{{ $logs->lastItem() }} of {{ $logs->total() }} entries</span>
+                {{ $logs->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+            @endif
         </div>
-        @endif
-    </div>
+    </form>
 
 </div>
 @endsection

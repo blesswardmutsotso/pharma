@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -9,6 +11,10 @@ use Illuminate\Routing\Controllers\Middleware;
 
 class SupplierController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['name', 'contact_person', 'phone', 'email', 'status'];
+
     public static function middleware(): array
     {
         return [
@@ -18,7 +24,7 @@ class SupplierController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(Request $request)
+    private function filteredSuppliersQuery(Request $request)
     {
         $query = Supplier::query();
 
@@ -31,9 +37,38 @@ class SupplierController extends Controller implements HasMiddleware
             });
         }
 
-        $suppliers = $query->orderBy('name')->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredSuppliersQuery($request);
+        $suppliers = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'name')
+            ->paginate(20)->withQueryString();
 
         return view('suppliers.index', compact('suppliers'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? Supplier::whereIn('id', $request->input('ids'))
+            : $this->filteredSuppliersQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'name')
+            ->get()
+            ->map(fn (Supplier $s) => [
+                'name' => $s->name,
+                'contact_person' => $s->contact_person,
+                'phone' => $s->phone,
+                'email' => $s->email,
+                'status' => ucfirst($s->status),
+            ]);
+
+        return $this->streamCsvExport('suppliers-' . now()->format('Ymd_His') . '.csv', [
+            'name' => 'Name', 'contact_person' => 'Contact Person', 'phone' => 'Phone',
+            'email' => 'Email', 'status' => 'Status',
+        ], $rows);
     }
 
     public function create()

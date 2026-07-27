@@ -14,11 +14,17 @@ use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
 use App\Models\StockAuditLog;
 use App\Exports\StockTransferExport;
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
 class StockTransferController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['transfer_no', 'transfer_type', 'status', 'total_qty', 'created_at'];
+
     public static function middleware(): array
     {
         return [
@@ -35,11 +41,13 @@ class StockTransferController extends Controller implements HasMiddleware
     // INDEX
     // ─────────────────────────────────────────────────────────────
 
-    public function index(Request $request)
+    private function filteredTransfersQuery(Request $request)
     {
-        $query = StockTransfer::with(['fromBranch', 'toBranch', 'requestedBy'])
-            ->latest();
+        $query = StockTransfer::with(['fromBranch', 'toBranch', 'requestedBy']);
 
+        if ($search = $request->get('search')) {
+            $query->where('transfer_no', 'like', "%{$search}%");
+        }
         if ($status = $request->get('status')) {
             $query->where('status', $status);
         }
@@ -56,7 +64,15 @@ class StockTransferController extends Controller implements HasMiddleware
             $query->whereDate('created_at', '<=', $to);
         }
 
-        $transfers = $query->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredTransfersQuery($request);
+        $transfers = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'created_at', 'desc')
+            ->paginate(20)->withQueryString();
+
         $branches  = Branch::where('is_active', true)->orderBy('name')->get();
 
         $stats = Cache::remember('transfers:stats', 120, fn() => [
@@ -599,6 +615,29 @@ class StockTransferController extends Controller implements HasMiddleware
 
             $remaining -= $take;
         }
+    }
+
+    public function bulkExport(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? StockTransfer::with(['fromBranch', 'toBranch'])->whereIn('id', $request->input('ids'))
+            : $this->filteredTransfersQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'created_at', 'desc')
+            ->get()
+            ->map(fn (StockTransfer $t) => [
+                'number' => $t->transfer_no,
+                'type' => $t->transfer_type,
+                'from' => $t->fromBranch?->name,
+                'to' => $t->toBranch?->name,
+                'qty' => $t->total_qty,
+                'status' => $t->status,
+            ]);
+
+        return $this->streamCsvExport('stock-transfers-' . now()->format('Ymd_His') . '.csv', [
+            'number' => 'Transfer No.', 'type' => 'Type', 'from' => 'From Branch',
+            'to' => 'To Branch', 'qty' => 'Total Qty', 'status' => 'Status',
+        ], $rows);
     }
 
     private function bustStockCache(): void

@@ -58,6 +58,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
 
     // ── Clients ──
     Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
+    Route::post('/clients/export', [ClientController::class, 'export'])->name('clients.export');
     Route::resource('clients', ClientController::class)->except(['destroy']);
 
     // ── Profile ──
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
         Route::get('/import/preview',  [StockTransferController::class, 'importPreview'])->name('import.preview');
         Route::post('/import/confirm', [StockTransferController::class, 'importConfirm'])->name('import.confirm');
         Route::get('/audit',           [StockTransferController::class, 'audit'])->name('audit');
+        Route::post('/bulk-export',    [StockTransferController::class, 'bulkExport'])->name('bulk-export');
         Route::get('/{transfer}',      [StockTransferController::class, 'show'])->name('show');
         Route::get('/{transfer}/export',  [StockTransferController::class, 'export'])->name('export');
         Route::post('/{transfer}/approve', [StockTransferController::class, 'approve'])->name('approve');
@@ -94,6 +96,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     });
 
     // ── Stock Adjustments (stock-take / damage / theft / breakage) ──
+    Route::post('/stock-adjustments/export', [StockAdjustmentController::class, 'export'])->name('stock-adjustments.export');
     Route::resource('stock-adjustments', StockAdjustmentController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/stock-adjustments/{stockAdjustment}/pdf', [StockAdjustmentController::class, 'pdf'])->name('stock-adjustments.pdf');
     Route::post('/stock-adjustments/{stockAdjustment}/approve', [StockAdjustmentController::class, 'approve'])->name('stock-adjustments.approve');
@@ -103,25 +106,31 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::get('/products/search',      [ProductController::class, 'search'])->name('products.search');
     Route::get('/products/template',    [ProductController::class, 'downloadTemplate'])->name('products.template');
     Route::post('/products/bulk-import', [ProductController::class, 'bulkImport'])->name('products.bulk-import');
+    Route::post('/products/export',     [ProductController::class, 'export'])->name('products.export');
     Route::resource('products', ProductController::class);
     Route::post('/stock-batches/{batch}/release', [StockBatchController::class, 'release'])->name('stock-batches.release');
 
     // ── Suppliers & Procurement ──
+    Route::post('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
     Route::resource('suppliers', SupplierController::class)->except(['destroy']);
     Route::post('/suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
     Route::post('/purchase-orders/generate-drafts', [PurchaseOrderController::class, 'generateDrafts'])->name('purchase-orders.generate-drafts');
+    Route::post('/purchase-orders/export', [PurchaseOrderController::class, 'export'])->name('purchase-orders.export');
     Route::resource('purchase-orders', PurchaseOrderController::class);
     Route::post('/purchase-orders/{purchaseOrder}/submit',  [PurchaseOrderController::class, 'submit'])->name('purchase-orders.submit');
     Route::post('/purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
     Route::post('/purchase-orders/{purchaseOrder}/close',   [PurchaseOrderController::class, 'close'])->name('purchase-orders.close');
+    Route::post('/goods-received-notes/export', [GoodsReceivedNoteController::class, 'export'])->name('goods-received-notes.export');
     Route::resource('goods-received-notes', GoodsReceivedNoteController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/goods-received-notes/{goodsReceivedNote}/pdf', [GoodsReceivedNoteController::class, 'pdf'])->name('goods-received-notes.pdf');
 
     // ── Sales orders, quotations & FEFO picking ──
+    Route::post('/quotations/export', [QuotationController::class, 'export'])->name('quotations.export');
     Route::resource('quotations', QuotationController::class)->only(['index', 'create', 'store', 'show']);
     Route::post('/quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
     Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
 
+    Route::post('/sales-orders/export', [SalesOrderController::class, 'export'])->name('sales-orders.export');
     Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/sales-orders/{salesOrder}/pdf', [SalesOrderController::class, 'pdf'])->name('sales-orders.pdf');
     Route::post('/sales-orders/{salesOrder}/confirm',       [SalesOrderController::class, 'confirm'])->name('sales-orders.confirm');
@@ -132,6 +141,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::post('/sales-orders/{salesOrder}/return',        [SalesOrderController::class, 'returnItem'])->name('sales-orders.return');
 
     // ── Invoicing & payment tracking ──
+    Route::post('/sales-invoices/export', [SalesInvoiceController::class, 'export'])->name('sales-invoices.export');
     Route::resource('sales-invoices', SalesInvoiceController::class)->only(['index', 'show']);
     Route::get('/sales-invoices/{salesInvoice}/pdf', [SalesInvoiceController::class, 'pdf'])->name('sales-invoices.pdf');
     Route::post('/sales-invoices/{salesInvoice}/credit-notes', [SalesCreditNoteController::class, 'store'])->name('sales-invoices.credit-notes.store');
@@ -179,6 +189,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // ── User Activity / Login Logs ──
     Route::get('/user-activity-logs', [UserActivityLogController::class, 'index'])->name('user-activity-logs.index');
+    Route::post('/user-activity-logs/export', [UserActivityLogController::class, 'export'])->name('user-activity-logs.export');
 });
 
 require __DIR__.'/auth.php';

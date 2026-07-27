@@ -74,60 +74,70 @@
         </div>
     @endif
 
-    <div class="table-card">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th class="text-center">Qty on Hand</th>
-                        <th class="text-center">Reorder Point</th>
-                        <th class="text-end">Selling Price</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($products as $product)
-                        <tr>
-                            <td><span class="inv-no">{{ $product->product_code }}</span></td>
-                            <td>{{ $product->product_description }}</td>
-                            <td>{{ $product->category ?? '—' }}</td>
-                            <td class="text-center">
-                                <span class="badge-status {{ $product->quantity == 0 ? 'badge-rejected' : ($product->isLowStock() ? 'badge-pending' : 'badge-approved') }}">
-                                    {{ $product->quantity }}
-                                </span>
-                            </td>
-                            <td class="text-center">{{ $product->reorder_point }}</td>
-                            <td class="text-end">${{ number_format($product->selling_price, 2) }}</td>
-                            <td class="text-center">
-                                <a class="btn-action" href="{{ route('products.show', $product) }}" title="View"><i class="bi bi-eye"></i></a>
-                                <a class="btn-action" href="{{ route('products.edit', $product) }}" title="Edit"><i class="bi bi-pencil"></i></a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7">
-                                <div class="empty-state">
-                                    <i class="bi bi-capsule"></i>
-                                    <p>No products found{{ request()->hasAny(['search','category','low_stock']) ? ' matching your filters' : '' }}.<br>
-                                    <a href="{{ route('products.create') }}" class="text-success fw-semibold">Add the first product</a></p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <form method="POST" action="{{ route('products.export') }}">
+        @csrf
+        <x-forward-filters />
 
-        @if($products->hasPages())
-        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light" style="font-size:.8rem;">
-            <span class="text-muted">Showing {{ $products->firstItem() }}–{{ $products->lastItem() }} of {{ $products->total() }} products</span>
-            {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
+        <div class="table-card">
+            <div class="d-flex justify-content-end p-2 border-bottom">
+                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-download me-1"></i>Export CSV</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;"><input type="checkbox" class="select-all-checkbox form-check-input"></th>
+                            <x-sortable-th field="product_code">Code</x-sortable-th>
+                            <x-sortable-th field="product_description">Name</x-sortable-th>
+                            <x-sortable-th field="category">Category</x-sortable-th>
+                            <x-sortable-th field="quantity" align="end">Qty on Hand</x-sortable-th>
+                            <x-sortable-th field="reorder_point" align="end">Reorder Point</x-sortable-th>
+                            <x-sortable-th field="selling_price" align="end">Selling Price</x-sortable-th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($products as $product)
+                            <tr>
+                                <td><input type="checkbox" name="ids[]" value="{{ $product->id }}" class="row-checkbox form-check-input"></td>
+                                <td><span class="inv-no">{{ $product->product_code }}</span></td>
+                                <td>{{ $product->product_description }}</td>
+                                <td>{{ $product->category ?? '—' }}</td>
+                                <td class="text-end">
+                                    <span class="badge-status {{ $product->quantity == 0 ? 'badge-rejected' : ($product->isLowStock() ? 'badge-pending' : 'badge-approved') }}">
+                                        {{ $product->quantity }}
+                                    </span>
+                                </td>
+                                <td class="text-end">{{ $product->reorder_point }}</td>
+                                <td class="text-end">${{ number_format($product->selling_price, 2) }}</td>
+                                <td class="text-center">
+                                    <a class="btn-action" href="{{ route('products.show', $product) }}" title="View"><i class="bi bi-eye"></i></a>
+                                    <a class="btn-action" href="{{ route('products.edit', $product) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="bi bi-capsule"></i>
+                                        <p>No products found{{ request()->hasAny(['search','category','low_stock']) ? ' matching your filters' : '' }}.<br>
+                                        <a href="{{ route('products.create') }}" class="text-success fw-semibold">Add the first product</a></p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($products->hasPages())
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light" style="font-size:.8rem;">
+                <span class="text-muted">Showing {{ $products->firstItem() }}–{{ $products->lastItem() }} of {{ $products->total() }} products</span>
+                {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+            @endif
         </div>
-        @endif
-    </div>
+    </form>
 
 </div>
 @endsection

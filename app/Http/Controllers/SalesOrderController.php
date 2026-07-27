@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Branch;
 use App\Models\Client;
 use App\Models\SalesOrder;
@@ -19,6 +21,10 @@ use RuntimeException;
 
 class SalesOrderController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['so_number', 'order_date', 'status'];
+
     public static function middleware(): array
     {
         return [
@@ -27,11 +33,52 @@ class SalesOrderController extends Controller implements HasMiddleware
             new Middleware('role:admin,manager,supervisor,sales,warehouse', only: ['startPicking', 'dispatch', 'returnItem']),
         ];
     }
-    public function index()
+
+    private function filteredSalesOrdersQuery(Request $request)
     {
-        $salesOrders = SalesOrder::with('client')->latest()->paginate(20);
+        $query = SalesOrder::with('client');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('so_number', 'like', "%{$search}%")
+                  ->orWhereHas('client', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredSalesOrdersQuery($request);
+        $salesOrders = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'order_date', 'desc')
+            ->paginate(20)->withQueryString();
 
         return view('sales-orders.index', compact('salesOrders'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? SalesOrder::with('client')->whereIn('id', $request->input('ids'))
+            : $this->filteredSalesOrdersQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'order_date', 'desc')
+            ->get()
+            ->map(fn (SalesOrder $so) => [
+                'number' => $so->so_number,
+                'client' => $so->client?->name,
+                'date' => $so->order_date?->format('Y-m-d'),
+                'status' => ucfirst($so->status),
+            ]);
+
+        return $this->streamCsvExport('sales-orders-' . now()->format('Ymd_His') . '.csv', [
+            'number' => 'SO Number', 'client' => 'Client', 'date' => 'Order Date', 'status' => 'Status',
+        ], $rows);
     }
 
     public function create()

@@ -577,6 +577,23 @@ function clearStockForm() {
 }
 </script>
 
+{{-- ── Global "select all" checkbox handler for table bulk-select ──────
+     Works on every list page with a .select-all-checkbox in the header
+     and .row-checkbox inputs in the body — no per-page JS needed.
+────────────────────────────────────────────────────────────────── --}}
+<script>
+document.addEventListener('change', function (e) {
+    if (!e.target.classList.contains('select-all-checkbox')) return;
+
+    const table = e.target.closest('table');
+    if (!table) return;
+
+    table.querySelectorAll('.row-checkbox').forEach(function (checkbox) {
+        checkbox.checked = e.target.checked;
+    });
+});
+</script>
+
 {{-- ── Global session expiry / auth handler ──────────────────────────
      Wraps window.fetch once, app-wide. Every AJAX call in every view
      gets 419/401 handling for free — no per-page code needed.

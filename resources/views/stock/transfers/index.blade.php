@@ -114,6 +114,7 @@
 
     {{-- Filter bar --}}
     <form method="GET" action="{{ route('stock.transfers.index') }}" class="filter-bar">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control" style="width:170px;" placeholder="Transfer no…">
         <select name="status" class="form-select" style="width:145px;">
             <option value="">All Statuses</option>
             @foreach(['DRAFT','PENDING','APPROVED','REJECTED','CANCELLED'] as $s)
@@ -134,7 +135,7 @@
         <input type="date" name="from" class="form-control" style="width:145px;" value="{{ request('from') }}">
         <input type="date" name="to"   class="form-control" style="width:145px;" value="{{ request('to') }}">
         <button type="submit" class="btn btn-success"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
-        @if(request()->hasAny(['status','type','branch','from','to']))
+        @if(request()->hasAny(['search','status','type','branch','from','to']))
             <a href="{{ route('stock.transfers.index') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-x-circle me-1"></i>Clear
             </a>
@@ -142,20 +143,27 @@
     </form>
 
     {{-- Table --}}
-    <div class="table-card">
+    <form method="POST" action="{{ route('stock.transfers.bulk-export') }}">
+        @csrf
+        <x-forward-filters />
+        <div class="table-card">
+            <div class="d-flex justify-content-end p-2 border-bottom">
+                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-download me-1"></i>Export CSV</button>
+            </div>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Transfer No</th>
-                        <th>Type</th>
+                        <th style="width:30px;"><input type="checkbox" class="select-all-checkbox form-check-input"></th>
+                        <x-sortable-th field="transfer_no">Transfer No</x-sortable-th>
+                        <x-sortable-th field="transfer_type">Type</x-sortable-th>
                         <th>From</th>
                         <th>To</th>
                         <th class="text-center">Items</th>
-                        <th class="text-center">Qty</th>
-                        <th>Status</th>
+                        <x-sortable-th field="total_qty" align="end">Qty</x-sortable-th>
+                        <x-sortable-th field="status">Status</x-sortable-th>
                         <th>Requested By</th>
-                        <th>Date</th>
+                        <x-sortable-th field="created_at">Date</x-sortable-th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -172,6 +180,7 @@
                         $initials = strtoupper(substr($t->requestedBy?->name ?? 'U', 0, 1));
                     @endphp
                     <tr>
+                        <td><input type="checkbox" name="ids[]" value="{{ $t->id }}" class="row-checkbox form-check-input"></td>
                         <td><span class="inv-no">{{ $t->transfer_no }}</span></td>
                         <td>
                             @if($t->transfer_type === 'OUTGOING')
@@ -203,10 +212,10 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10">
+                        <td colspan="11">
                             <div class="empty-state">
                                 <i class="bi bi-arrow-left-right"></i>
-                                <p>No transfers found{{ request()->hasAny(['status','type','branch','from','to']) ? ' matching your filters' : '' }}.<br>
+                                <p>No transfers found{{ request()->hasAny(['search','status','type','branch','from','to']) ? ' matching your filters' : '' }}.<br>
                                 <a href="{{ route('stock.transfers.create') }}" class="text-success fw-semibold">Create the first transfer</a></p>
                             </div>
                         </td>
@@ -223,6 +232,7 @@
         </div>
         @endif
     </div>
+    </form>
 
 </div>
 @endsection

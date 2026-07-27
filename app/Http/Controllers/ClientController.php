@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -9,6 +11,10 @@ use Illuminate\Routing\Controllers\Middleware;
 
 class ClientController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['name', 'contact_person', 'phone', 'email', 'vat_number', 'tin'];
+
     public static function middleware(): array
     {
         return [
@@ -33,7 +39,7 @@ class ClientController extends Controller implements HasMiddleware
         return response()->json($clients);
     }
 
-    public function index(Request $request)
+    private function filteredClientsQuery(Request $request)
     {
         $query = Client::query();
 
@@ -48,13 +54,43 @@ class ClientController extends Controller implements HasMiddleware
             });
         }
 
-        $clients = $query->orderBy('name')->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredClientsQuery($request);
+        $clients = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'name')
+            ->paginate(20)->withQueryString();
 
         $stats = [
             'total' => Client::count(),
         ];
 
         return view('clients.index', compact('clients', 'stats'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? Client::whereIn('id', $request->input('ids'))
+            : $this->filteredClientsQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'name')
+            ->get()
+            ->map(fn (Client $c) => [
+                'name' => $c->name,
+                'contact_person' => $c->contact_person,
+                'phone' => $c->phone,
+                'email' => $c->email,
+                'vat_number' => $c->vat_number,
+                'tin' => $c->tin,
+            ]);
+
+        return $this->streamCsvExport('clients-' . now()->format('Ymd_His') . '.csv', [
+            'name' => 'Name', 'contact_person' => 'Contact Person', 'phone' => 'Phone',
+            'email' => 'Email', 'vat_number' => 'VAT Number', 'tin' => 'TIN',
+        ], $rows);
     }
 
     public function create()

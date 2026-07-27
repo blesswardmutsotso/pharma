@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Branch;
 use App\Models\GoodsReceivedNote;
 use App\Models\GoodsReceivedNoteItem;
@@ -19,17 +21,64 @@ use Illuminate\Support\Facades\DB;
 
 class GoodsReceivedNoteController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['grn_number', 'received_date', 'status'];
+
     public static function middleware(): array
     {
         return [
             new Middleware('role:admin,manager,supervisor,procurement,warehouse,inventory_manager', only: ['create', 'store']),
         ];
     }
-    public function index()
+
+    private function filteredGrnsQuery(Request $request)
     {
-        $goodsReceivedNotes = GoodsReceivedNote::with(['supplier', 'purchaseOrder'])->latest()->paginate(20);
+        $query = GoodsReceivedNote::with(['supplier', 'purchaseOrder']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('grn_number', 'like', "%{$search}%")
+                  ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredGrnsQuery($request);
+        $goodsReceivedNotes = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'received_date', 'desc')
+            ->paginate(20)->withQueryString();
 
         return view('goods-received-notes.index', compact('goodsReceivedNotes'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? GoodsReceivedNote::with(['supplier', 'purchaseOrder'])->whereIn('id', $request->input('ids'))
+            : $this->filteredGrnsQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'received_date', 'desc')
+            ->get()
+            ->map(fn (GoodsReceivedNote $g) => [
+                'number' => $g->grn_number,
+                'supplier' => $g->supplier?->name,
+                'po' => $g->purchaseOrder?->po_number,
+                'date' => $g->received_date?->format('Y-m-d'),
+                'status' => ucfirst($g->status),
+            ]);
+
+        return $this->streamCsvExport('goods-received-notes-' . now()->format('Ymd_His') . '.csv', [
+            'number' => 'GRN Number', 'supplier' => 'Supplier', 'po' => 'Purchase Order',
+            'date' => 'Received Date', 'status' => 'Status',
+        ], $rows);
     }
 
     public function create()

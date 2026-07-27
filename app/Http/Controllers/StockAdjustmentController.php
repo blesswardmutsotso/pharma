@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Branch;
 use App\Models\Stock;
 use App\Models\StockAdjustment;
@@ -15,6 +17,10 @@ use Illuminate\Support\Facades\DB;
 
 class StockAdjustmentController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['adjustment_no', 'type', 'status', 'created_at'];
+
     public static function middleware(): array
     {
         return [
@@ -23,10 +29,13 @@ class StockAdjustmentController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(Request $request)
+    private function filteredAdjustmentsQuery(Request $request)
     {
-        $query = StockAdjustment::with(['branch', 'requestedBy'])->latest();
+        $query = StockAdjustment::with(['branch', 'requestedBy']);
 
+        if ($search = $request->get('search')) {
+            $query->where('adjustment_no', 'like', "%{$search}%");
+        }
         if ($status = $request->get('status')) {
             $query->where('status', $status);
         }
@@ -34,9 +43,38 @@ class StockAdjustmentController extends Controller implements HasMiddleware
             $query->where('type', $type);
         }
 
-        $adjustments = $query->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredAdjustmentsQuery($request);
+        $adjustments = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'created_at', 'desc')
+            ->paginate(20)->withQueryString();
 
         return view('stock-adjustments.index', compact('adjustments'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? StockAdjustment::with(['branch', 'requestedBy'])->whereIn('id', $request->input('ids'))
+            : $this->filteredAdjustmentsQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'created_at', 'desc')
+            ->get()
+            ->map(fn (StockAdjustment $a) => [
+                'number' => $a->adjustment_no,
+                'type' => $a->typeLabel(),
+                'branch' => $a->branch?->name,
+                'requested_by' => $a->requestedBy?->name,
+                'status' => ucfirst($a->status),
+            ]);
+
+        return $this->streamCsvExport('stock-adjustments-' . now()->format('Ymd_His') . '.csv', [
+            'number' => 'Adjustment No.', 'type' => 'Type', 'branch' => 'Branch',
+            'requested_by' => 'Requested By', 'status' => 'Status',
+        ], $rows);
     }
 
     public function create()

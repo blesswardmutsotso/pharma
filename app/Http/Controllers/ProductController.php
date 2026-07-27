@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Stock;
 use App\Models\StockAuditLog;
 use App\Models\Supplier;
@@ -12,6 +14,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['product_code', 'product_description', 'category', 'quantity', 'reorder_point', 'selling_price'];
+
     public static function middleware(): array
     {
         return [
@@ -60,7 +66,7 @@ class ProductController extends Controller implements HasMiddleware
         return response()->json($products);
     }
 
-    public function index(Request $request)
+    private function filteredProductsQuery(Request $request)
     {
         $query = Stock::query();
 
@@ -80,7 +86,15 @@ class ProductController extends Controller implements HasMiddleware
             $query->whereColumn('quantity', '<=', 'reorder_point')->where('reorder_point', '>', 0);
         }
 
-        $products   = $query->orderBy('product_description')->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredProductsQuery($request);
+        $products = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'product_description')
+            ->paginate(20)->withQueryString();
+
         $categories = Stock::whereNotNull('category')->distinct()->orderBy('category')->pluck('category');
 
         $stats = [
@@ -91,6 +105,29 @@ class ProductController extends Controller implements HasMiddleware
         ];
 
         return view('products.index', compact('products', 'categories', 'stats'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? Stock::whereIn('id', $request->input('ids'))
+            : $this->filteredProductsQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'product_description')
+            ->get()
+            ->map(fn (Stock $s) => [
+                'code' => $s->product_code,
+                'name' => $s->product_description,
+                'category' => $s->category,
+                'qty' => $s->quantity,
+                'reorder_point' => $s->reorder_point,
+                'selling_price' => number_format($s->selling_price, 2),
+            ]);
+
+        return $this->streamCsvExport('products-' . now()->format('Ymd_His') . '.csv', [
+            'code' => 'SKU', 'name' => 'Product', 'category' => 'Category',
+            'qty' => 'Qty on Hand', 'reorder_point' => 'Reorder Point', 'selling_price' => 'Selling Price',
+        ], $rows);
     }
 
     public function create()

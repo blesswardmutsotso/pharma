@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\Sortable;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
@@ -13,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderController extends Controller implements HasMiddleware
 {
+    use ExportsCsv, Sortable;
+
+    private const SORTABLE_COLUMNS = ['po_number', 'order_date', 'status'];
+
     public static function middleware(): array
     {
         return [
@@ -21,11 +27,51 @@ class PurchaseOrderController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index()
+    private function filteredPurchaseOrdersQuery(Request $request)
     {
-        $purchaseOrders = PurchaseOrder::with('supplier')->latest()->paginate(20);
+        $query = PurchaseOrder::with('supplier');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('po_number', 'like', "%{$search}%")
+                  ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->filteredPurchaseOrdersQuery($request);
+        $purchaseOrders = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'order_date', 'desc')
+            ->paginate(20)->withQueryString();
 
         return view('purchase-orders.index', compact('purchaseOrders'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = $request->filled('ids')
+            ? PurchaseOrder::with('supplier')->whereIn('id', $request->input('ids'))
+            : $this->filteredPurchaseOrdersQuery($request);
+
+        $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'order_date', 'desc')
+            ->get()
+            ->map(fn (PurchaseOrder $po) => [
+                'number' => $po->po_number,
+                'supplier' => $po->supplier?->name,
+                'date' => $po->order_date?->format('Y-m-d'),
+                'status' => ucfirst($po->status),
+            ]);
+
+        return $this->streamCsvExport('purchase-orders-' . now()->format('Ymd_His') . '.csv', [
+            'number' => 'PO Number', 'supplier' => 'Supplier', 'date' => 'Order Date', 'status' => 'Status',
+        ], $rows);
     }
 
     public function create()
