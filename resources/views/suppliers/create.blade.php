@@ -49,6 +49,14 @@
                 <input type="text" name="accreditation_body" class="form-control" value="{{ old('accreditation_body') }}" placeholder="e.g. MCAZ">
             </div>
             <div class="col-md-6">
+                <label class="form-label">MCAZ Licensed Person</label>
+                <input type="text" name="mcaz_licensed_person" class="form-control" value="{{ old('mcaz_licensed_person') }}" placeholder="Name of the MCAZ-licensed responsible person">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Wholesale License Number</label>
+                <input type="text" name="wholesale_license_number" class="form-control" value="{{ old('wholesale_license_number') }}">
+            </div>
+            <div class="col-md-6">
                 <label class="form-label">Address</label>
                 <input type="text" name="address" class="form-control" value="{{ old('address') }}">
             </div>

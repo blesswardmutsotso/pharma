@@ -10,7 +10,7 @@ class StockBatchController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
     {
-        return [new Middleware('role:admin,inventory_manager,warehouse')];
+        return [new Middleware('role:admin,manager,supervisor,inventory_manager,warehouse')];
     }
 
     /**

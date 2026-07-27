@@ -18,6 +18,8 @@ class Supplier extends Model
         'license_number',
         'license_expiry_date',
         'accreditation_body',
+        'mcaz_licensed_person',
+        'wholesale_license_number',
         'address',
         'payment_terms',
         'status',

@@ -16,8 +16,8 @@ class PurchaseOrderController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,procurement', only: ['create', 'store', 'submit', 'generateDrafts']),
-            new Middleware('role:admin,procurement,inventory_manager', only: ['approve', 'close']),
+            new Middleware('role:admin,manager,procurement', only: ['create', 'store', 'submit', 'generateDrafts']),
+            new Middleware('role:admin,manager,supervisor,procurement,inventory_manager', only: ['approve', 'close']),
         ];
     }
 

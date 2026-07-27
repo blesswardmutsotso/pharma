@@ -15,6 +15,8 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     const ROLE_ADMIN             = 'admin';
+    const ROLE_MANAGER           = 'manager';
+    const ROLE_SUPERVISOR        = 'supervisor';
     const ROLE_INVENTORY_MANAGER = 'inventory_manager';
     const ROLE_SALES             = 'sales';
     const ROLE_PROCUREMENT       = 'procurement';
@@ -26,6 +28,8 @@ class User extends Authenticatable
     {
         return [
             self::ROLE_ADMIN             => 'Administrator',
+            self::ROLE_MANAGER           => 'Manager',
+            self::ROLE_SUPERVISOR        => 'Supervisor',
             self::ROLE_INVENTORY_MANAGER => 'Inventory Manager',
             self::ROLE_SALES             => 'Sales User',
             self::ROLE_PROCUREMENT       => 'Procurement Officer',

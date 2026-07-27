@@ -38,6 +38,8 @@
                 </div>
             </div>
             <div><div class="label">Accreditation Body</div><div class="value">{{ $supplier->accreditation_body ?? '—' }}</div></div>
+            <div><div class="label">MCAZ Licensed Person</div><div class="value">{{ $supplier->mcaz_licensed_person ?? '—' }}</div></div>
+            <div><div class="label">Wholesale License Number</div><div class="value">{{ $supplier->wholesale_license_number ?? '—' }}</div></div>
             <div><div class="label">Address</div><div class="value">{{ $supplier->address ?? '—' }}</div></div>
             <div><div class="label">Payment Terms</div><div class="value">{{ $supplier->payment_terms ?? '—' }}</div></div>
         </div>

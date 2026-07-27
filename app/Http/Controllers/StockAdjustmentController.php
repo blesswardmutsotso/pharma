@@ -18,8 +18,8 @@ class StockAdjustmentController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,inventory_manager,warehouse', only: ['create', 'store']),
-            new Middleware('role:admin,inventory_manager', only: ['approve', 'reject']),
+            new Middleware('role:admin,manager,inventory_manager,warehouse', only: ['create', 'store']),
+            new Middleware('role:admin,manager,supervisor,inventory_manager', only: ['approve', 'reject']),
         ];
     }
 

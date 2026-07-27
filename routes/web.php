@@ -26,6 +26,7 @@ use App\Http\Controllers\SalesInvoiceController;
 use App\Http\Controllers\SalesCreditNoteController;
 use App\Http\Controllers\SalesPaymentController;
 use App\Http\Controllers\CustomerStatementController;
+use App\Http\Controllers\UserActivityLogController;
 
 // ─────────────────────────────────────────────────────────────
 // PUBLIC
@@ -122,6 +123,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
 
     Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'create', 'store', 'show']);
+    Route::get('/sales-orders/{salesOrder}/pdf', [SalesOrderController::class, 'pdf'])->name('sales-orders.pdf');
     Route::post('/sales-orders/{salesOrder}/confirm',       [SalesOrderController::class, 'confirm'])->name('sales-orders.confirm');
     Route::post('/sales-orders/{salesOrder}/start-picking', [SalesOrderController::class, 'startPicking'])->name('sales-orders.start-picking');
     Route::get('/sales-orders/{salesOrder}/picking-list',   [SalesOrderController::class, 'pickingList'])->name('sales-orders.picking-list');
@@ -174,6 +176,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/branches',             [BranchController::class, 'store'])->name('admin.branches.store');
     Route::put('/admin/branches/{branch}',     [BranchController::class, 'update'])->name('admin.branches.update');
     Route::delete('/admin/branches/{branch}',  [BranchController::class, 'destroy'])->name('admin.branches.destroy');
+
+    // ── User Activity / Login Logs ──
+    Route::get('/user-activity-logs', [UserActivityLogController::class, 'index'])->name('user-activity-logs.index');
 });
 
 require __DIR__.'/auth.php';

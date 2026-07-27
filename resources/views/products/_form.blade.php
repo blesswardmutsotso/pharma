@@ -103,3 +103,29 @@
         <div class="form-text">Used by "Generate Draft POs for Low Stock" on the Purchase Orders page.</div>
     </div>
 </div>
+
+@if (!$product)
+<div class="form-section-title">Initial Batch (optional)</div>
+<div class="alert alert-light border small mb-3">
+    Leave these blank to add the product with zero stock — stock is normally received via a
+    <strong>Goods Received Note</strong> instead. Fill these in only if you're loading existing stock directly.
+</div>
+<div class="row g-3">
+    <div class="col-md-3">
+        <label class="form-label">Batch Number</label>
+        <input type="text" name="initial_batch_number" class="form-control" value="{{ old('initial_batch_number') }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Expiry Date</label>
+        <input type="date" name="initial_expiry_date" class="form-control" value="{{ old('initial_expiry_date') }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Quantity</label>
+        <input type="number" name="initial_qty" class="form-control" min="1" value="{{ old('initial_qty') }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Unit Cost</label>
+        <input type="number" step="0.01" name="initial_unit_cost" class="form-control" min="0" value="{{ old('initial_unit_cost') }}">
+    </div>
+</div>
+@endif

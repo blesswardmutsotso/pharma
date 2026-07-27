@@ -10,7 +10,10 @@
             <h4><i class="bi bi-cart-plus me-2 text-success"></i>Sales Order {{ $salesOrder->so_number }}</h4>
             <div class="sub"><span class="badge-status badge-{{ $salesOrder->status }}">{{ ucfirst($salesOrder->status) }}</span></div>
         </div>
-        <a href="{{ route('sales-orders.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('sales-orders.pdf', $salesOrder) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Print PDF</a>
+            <a href="{{ route('sales-orders.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        </div>
     </div>
 
     <div class="detail-card">

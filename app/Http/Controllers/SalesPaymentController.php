@@ -16,7 +16,7 @@ class SalesPaymentController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
     {
-        return [new Middleware('role:admin,finance')];
+        return [new Middleware('role:admin,manager,finance')];
     }
 
     public function store(Request $request, Client $client)

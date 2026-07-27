@@ -17,7 +17,7 @@ class QuotationController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,sales', only: ['create', 'store', 'convert']),
+            new Middleware('role:admin,manager,sales', only: ['create', 'store', 'convert']),
         ];
     }
     public function index()

@@ -90,6 +90,33 @@ class PrintDocumentsTest extends TestCase
         $response->assertHeader('content-type', 'application/pdf');
     }
 
+    public function test_sales_order_pdf_renders_and_tracks_duplicate_printing(): void
+    {
+        $this->actingAsAdmin();
+        $client = Client::create(['name' => 'SO PDF Client']);
+
+        $this->post('/sales-orders', [
+            'client_id' => $client->id,
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'SO-PDF-ITEM',
+                'product_description' => 'Test Product',
+                'qty_ordered' => 3,
+                'unit_price' => 6,
+            ]],
+        ]);
+        $so = SalesOrder::latest('id')->firstOrFail();
+
+        $first = $this->get("/sales-orders/{$so->id}/pdf");
+        $first->assertOk();
+        $first->assertHeader('content-type', 'application/pdf');
+        $this->assertSame(1, $so->fresh()->print_count);
+
+        $second = $this->get("/sales-orders/{$so->id}/pdf");
+        $second->assertOk();
+        $this->assertSame(2, $so->fresh()->print_count);
+    }
+
     public function test_invoice_pdf_renders_with_qr_code(): void
     {
         $this->actingAsAdmin();

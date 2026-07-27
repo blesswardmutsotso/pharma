@@ -363,6 +363,13 @@
                             <p>Analytics</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('user-activity-logs.index') }}"
+                           class="nav-link {{ request()->routeIs('user-activity-logs.*') ? 'active-page' : '' }}">
+                            <i class="nav-icon bi bi-clock-history text-success"></i>
+                            <p>User Logs</p>
+                        </a>
+                    </li>
                     @endif
 
                     {{-- ═══════ Account ═══════ --}}

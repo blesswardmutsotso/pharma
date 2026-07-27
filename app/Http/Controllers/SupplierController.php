@@ -12,7 +12,7 @@ class SupplierController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,procurement', only: [
+            new Middleware('role:admin,manager,procurement', only: [
                 'create', 'store', 'edit', 'update', 'toggleStatus',
             ]),
         ];
@@ -52,6 +52,8 @@ class SupplierController extends Controller implements HasMiddleware
             'license_number' => ['nullable', 'string', 'max:100'],
             'license_expiry_date' => ['nullable', 'date'],
             'accreditation_body' => ['nullable', 'string', 'max:255'],
+            'mcaz_licensed_person' => ['nullable', 'string', 'max:255'],
+            'wholesale_license_number' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:500'],
             'payment_terms' => ['nullable', 'string', 'max:100'],
             'status' => ['required', 'in:active,inactive'],

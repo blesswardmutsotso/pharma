@@ -80,6 +80,8 @@ class ERPModuleTest extends TestCase
             'license_number' => 'MCAZ-WH-00456',
             'license_expiry_date' => now()->addYear()->toDateString(),
             'accreditation_body' => 'MCAZ',
+            'mcaz_licensed_person' => 'Dr. Jane Chirwa',
+            'wholesale_license_number' => 'WPL-2026-0089',
             'status' => 'active',
         ]);
 
@@ -88,6 +90,8 @@ class ERPModuleTest extends TestCase
             'name' => 'Licensed Pharma Supplier',
             'license_number' => 'MCAZ-WH-00456',
             'accreditation_body' => 'MCAZ',
+            'mcaz_licensed_person' => 'Dr. Jane Chirwa',
+            'wholesale_license_number' => 'WPL-2026-0089',
         ]);
 
         $supplier = \App\Models\Supplier::where('name', 'Licensed Pharma Supplier')->firstOrFail();

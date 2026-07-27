@@ -12,7 +12,7 @@ class ClientController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,sales,finance', only: ['create', 'store', 'edit', 'update']),
+            new Middleware('role:admin,manager,sales,finance', only: ['create', 'store', 'edit', 'update']),
         ];
     }
 

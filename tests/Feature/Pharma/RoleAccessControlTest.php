@@ -199,4 +199,85 @@ class RoleAccessControlTest extends TestCase
         $this->post("/stock/transfers/{$transfer->id}/approve")->assertForbidden();
         $this->assertSame(\App\Models\StockTransfer::STATUS_PENDING, $transfer->fresh()->status);
     }
+
+    public function test_manager_can_perform_operational_actions_across_departments(): void
+    {
+        $this->actingAsRole(User::ROLE_MANAGER);
+        $supplier = Supplier::factory()->create(['status' => 'active']);
+
+        // Procurement-style action.
+        $this->post('/purchase-orders', [
+            'po_number' => 'PO-MGR-1',
+            'supplier_id' => $supplier->id,
+            'order_date' => now()->toDateString(),
+            'status' => 'draft',
+            'items' => [[
+                'product_code' => 'MGR-1',
+                'product_description' => 'Test',
+                'qty_ordered' => 1,
+                'unit_cost' => 1,
+            ]],
+        ])->assertRedirect();
+        $this->assertDatabaseHas('purchase_orders', ['po_number' => 'PO-MGR-1']);
+
+        // Sales-style action.
+        $client = Client::create(['name' => 'Manager Test Client']);
+        $this->post('/sales-orders', [
+            'client_id' => $client->id,
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'MGR-2',
+                'product_description' => 'Test',
+                'qty_ordered' => 1,
+                'unit_price' => 1,
+            ]],
+        ])->assertRedirect();
+        $this->assertDatabaseHas('sales_orders', ['client_id' => $client->id]);
+
+        // Product/catalogue-style action.
+        $this->post('/products', [
+            'product_code' => 'MGR-PROD-1',
+            'product_description' => 'Manager Test Product',
+            'buying_price' => 1,
+            'selling_price' => 2,
+        ])->assertRedirect();
+        $this->assertDatabaseHas('stocks', ['product_code' => 'MGR-PROD-1']);
+    }
+
+    public function test_manager_cannot_manage_other_users(): void
+    {
+        $this->actingAsRole(User::ROLE_MANAGER);
+        $victim = User::factory()->create(['role' => User::ROLE_SALES]);
+
+        $this->post('/users', [
+            'new_name' => 'Should Not Work',
+            'new_email' => 'shouldnotwork@example.com',
+            'new_password' => 'Secure123!',
+            'new_password_confirmation' => 'Secure123!',
+            'new_user_type' => 0,
+            'new_role' => User::ROLE_ADMIN,
+        ])->assertForbidden();
+
+        $this->post("/users/{$victim->id}/toggle-active")->assertForbidden();
+    }
+
+    public function test_supervisor_can_approve_but_not_create_a_purchase_order(): void
+    {
+        $this->actingAsRole(User::ROLE_SUPERVISOR);
+        $supplier = Supplier::factory()->create(['status' => 'active']);
+
+        // Cannot author a new PO.
+        $this->get('/purchase-orders/create')->assertForbidden();
+
+        // But can approve one already submitted (created directly here to isolate the approve check).
+        $po = \App\Models\PurchaseOrder::create([
+            'po_number' => 'PO-SUP-1',
+            'supplier_id' => $supplier->id,
+            'order_date' => now()->toDateString(),
+            'status' => \App\Models\PurchaseOrder::STATUS_SUBMITTED,
+        ]);
+
+        $this->post("/purchase-orders/{$po->id}/approve")->assertRedirect();
+        $this->assertSame(\App\Models\PurchaseOrder::STATUS_APPROVED, $po->fresh()->status);
+    }
 }

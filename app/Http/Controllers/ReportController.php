@@ -22,7 +22,7 @@ class ReportController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         // Every pharma role may run reports (read-only); no write actions here.
-        return [new Middleware('role:admin,inventory_manager,sales,procurement,finance,warehouse,auditor')];
+        return [new Middleware('role:admin,manager,supervisor,inventory_manager,sales,procurement,finance,warehouse,auditor')];
     }
 
     public function index()

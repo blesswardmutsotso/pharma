@@ -49,6 +49,48 @@ class ProductBatchLedgerTest extends TestCase
         $this->assertSame(50, $product->reorder_qty);
     }
 
+    public function test_product_can_be_created_with_an_initial_batch(): void
+    {
+        $this->actingAsAuthenticatedUser();
+
+        $response = $this->post('/products', [
+            'product_code' => 'PRD-101',
+            'product_description' => 'Paracetamol 500mg',
+            'buying_price' => 1.20,
+            'selling_price' => 2.00,
+            'initial_batch_number' => 'INIT-BATCH-1',
+            'initial_expiry_date' => now()->addYear()->toDateString(),
+            'initial_qty' => 40,
+            'initial_unit_cost' => 1.20,
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+
+        $product = Stock::where('product_code', 'PRD-101')->firstOrFail();
+        $this->assertSame(40, $product->quantity);
+
+        $batch = StockBatch::where('product_code', 'PRD-101')->firstOrFail();
+        $this->assertSame('INIT-BATCH-1', $batch->batch_number);
+        $this->assertSame(40, $batch->qty_on_hand);
+        $this->assertSame(StockBatch::STATUS_ACTIVE, $batch->status);
+    }
+
+    public function test_product_can_be_created_without_a_batch_and_defaults_to_zero_stock(): void
+    {
+        $this->actingAsAuthenticatedUser();
+
+        $this->post('/products', [
+            'product_code' => 'PRD-102',
+            'product_description' => 'Ibuprofen 400mg',
+            'buying_price' => 1.00,
+            'selling_price' => 1.80,
+        ])->assertRedirect(route('products.index'));
+
+        $product = Stock::where('product_code', 'PRD-102')->firstOrFail();
+        $this->assertSame(0, $product->quantity);
+        $this->assertSame(0, StockBatch::where('product_code', 'PRD-102')->count());
+    }
+
     public function test_receiving_a_grn_creates_a_batch_and_syncs_aggregate_quantity(): void
     {
         $this->actingAsAuthenticatedUser();

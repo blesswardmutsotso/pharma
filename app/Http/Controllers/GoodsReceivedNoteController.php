@@ -22,7 +22,7 @@ class GoodsReceivedNoteController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,procurement,warehouse,inventory_manager', only: ['create', 'store']),
+            new Middleware('role:admin,manager,supervisor,procurement,warehouse,inventory_manager', only: ['create', 'store']),
         ];
     }
     public function index()

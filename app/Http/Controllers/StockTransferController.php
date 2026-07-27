@@ -22,10 +22,10 @@ class StockTransferController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,warehouse,inventory_manager,procurement', only: [
+            new Middleware('role:admin,manager,warehouse,inventory_manager,procurement', only: [
                 'create', 'store', 'import', 'importPreview', 'importConfirm',
             ]),
-            new Middleware('role:admin,warehouse,inventory_manager', only: [
+            new Middleware('role:admin,manager,supervisor,warehouse,inventory_manager', only: [
                 'approve', 'reject', 'cancel',
             ]),
         ];

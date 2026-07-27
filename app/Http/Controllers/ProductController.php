@@ -15,7 +15,7 @@ class ProductController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,inventory_manager,procurement', only: [
+            new Middleware('role:admin,manager,inventory_manager,procurement', only: [
                 'create', 'store', 'edit', 'update', 'destroy', 'bulkImport',
             ]),
         ];
@@ -121,6 +121,10 @@ class ProductController extends Controller implements HasMiddleware
             'reorder_qty'             => 'nullable|integer|min:0',
             'requires_batch_tracking' => 'nullable|boolean',
             'default_supplier_id'     => 'nullable|exists:suppliers,id',
+            'initial_batch_number'    => 'nullable|string|max:100',
+            'initial_expiry_date'     => 'required_with:initial_batch_number|nullable|date',
+            'initial_qty'             => 'required_with:initial_batch_number|nullable|integer|min:1',
+            'initial_unit_cost'       => 'nullable|numeric|min:0',
         ]);
 
         $product = Stock::create(array_merge($validated, [
@@ -130,13 +134,30 @@ class ProductController extends Controller implements HasMiddleware
             'requires_batch_tracking' => $request->boolean('requires_batch_tracking', true),
         ], $this->defaultTaxFields((float) $validated['selling_price'])));
 
+        if (!empty($validated['initial_batch_number'])) {
+            \App\Models\StockBatch::create([
+                'product_code' => $product->product_code,
+                'batch_number' => $validated['initial_batch_number'],
+                'expiry_date'  => $validated['initial_expiry_date'],
+                'qty_on_hand'  => $validated['initial_qty'],
+                'unit_cost'    => $validated['initial_unit_cost'] ?? $validated['buying_price'],
+                'status'       => \App\Models\StockBatch::STATUS_ACTIVE,
+                'source_type'  => 'ProductCatalogue',
+                'source_id'    => $product->id,
+            ]);
+
+            $product->syncQuantityFromBatches();
+        }
+
         StockAuditLog::record(
             action: StockAuditLog::STOCK_IN,
             productCode: $product->product_code,
             productDescription: $product->product_description,
             qtyBefore: 0,
-            qtyAfter: 0,
-            notes: 'Product created in catalogue'
+            qtyAfter: $product->quantity,
+            notes: !empty($validated['initial_batch_number'])
+                ? 'Product created in catalogue with initial batch ' . $validated['initial_batch_number']
+                : 'Product created in catalogue'
         );
 
         return redirect()->route('products.index')->with('success', 'Product added to catalogue.');

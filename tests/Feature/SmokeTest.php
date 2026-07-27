@@ -53,6 +53,7 @@ class SmokeTest extends TestCase
             '/account/settings',
             '/analytics',
             '/admin/branches',
+            '/user-activity-logs',
             '/reports',
             '/reports/current-stock',
             '/reports/stock-movement',

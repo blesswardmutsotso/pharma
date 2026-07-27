@@ -22,8 +22,9 @@ class SalesOrderController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,sales', only: ['create', 'store', 'confirm', 'cancel']),
-            new Middleware('role:admin,sales,warehouse', only: ['startPicking', 'dispatch', 'returnItem']),
+            new Middleware('role:admin,manager,sales', only: ['create', 'store']),
+            new Middleware('role:admin,manager,supervisor,sales', only: ['confirm', 'cancel']),
+            new Middleware('role:admin,manager,supervisor,sales,warehouse', only: ['startPicking', 'dispatch', 'returnItem']),
         ];
     }
     public function index()
@@ -91,6 +92,23 @@ class SalesOrderController extends Controller implements HasMiddleware
         $salesOrder->load(['client', 'branch', 'items.batchAllocations.stockBatch']);
 
         return view('sales-orders.show', compact('salesOrder'));
+    }
+
+    public function pdf(Request $request, SalesOrder $salesOrder)
+    {
+        $salesOrder->load(['client', 'branch', 'items']);
+
+        $isDuplicate = $salesOrder->print_count > 0;
+        $salesOrder->increment('print_count');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-order', [
+            'salesOrder' => $salesOrder,
+            'isDuplicate' => $isDuplicate,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = "{$salesOrder->so_number}.pdf";
+
+        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
     }
 
     public function confirm(SalesOrder $salesOrder, FefoAllocationService $fefo)
