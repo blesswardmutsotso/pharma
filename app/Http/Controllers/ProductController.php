@@ -40,6 +40,26 @@ class ProductController extends Controller implements HasMiddleware
         ];
     }
 
+    /**
+     * AJAX quick-lookup for product pickers (e.g. quotation/order line items).
+     * Deliberately includes depleted/zero-stock products — a quotation or
+     * order line should be able to reference any catalogue item regardless
+     * of current quantity on hand.
+     */
+    public function search(Request $request)
+    {
+        $q = $request->input('q', '');
+
+        $products = Stock::where('product_code', 'like', "%{$q}%")
+            ->orWhere('product_description', 'like', "%{$q}%")
+            ->orWhere('generic_name', 'like', "%{$q}%")
+            ->orderBy('product_description')
+            ->limit(15)
+            ->get(['product_code', 'product_description', 'selling_price', 'quantity']);
+
+        return response()->json($products);
+    }
+
     public function index(Request $request)
     {
         $query = Stock::query();

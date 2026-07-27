@@ -99,6 +99,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::post('/stock-adjustments/{stockAdjustment}/reject',  [StockAdjustmentController::class, 'reject'])->name('stock-adjustments.reject');
 
     // ── Products ──
+    Route::get('/products/search',      [ProductController::class, 'search'])->name('products.search');
     Route::get('/products/template',    [ProductController::class, 'downloadTemplate'])->name('products.template');
     Route::post('/products/bulk-import', [ProductController::class, 'bulkImport'])->name('products.bulk-import');
     Route::resource('products', ProductController::class);

@@ -211,4 +211,20 @@ class ProductBatchLedgerTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('error');
     }
+
+    public function test_product_search_includes_depleted_zero_stock_items(): void
+    {
+        $this->actingAsAuthenticatedUser();
+
+        Stock::factory()->create(['product_code' => 'DEPLETED-1', 'product_description' => 'Depleted Product', 'quantity' => 0]);
+        Stock::factory()->create(['product_code' => 'INSTOCK-1', 'product_description' => 'In Stock Product', 'quantity' => 50]);
+
+        $response = $this->get('/products/search?q=Product');
+
+        $response->assertOk();
+        $codes = collect($response->json())->pluck('product_code');
+
+        $this->assertTrue($codes->contains('DEPLETED-1'));
+        $this->assertTrue($codes->contains('INSTOCK-1'));
+    }
 }
