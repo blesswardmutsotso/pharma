@@ -39,6 +39,16 @@
         <div class="form-text mt-1">Quote number is generated automatically on save (e.g. Qu0001).</div>
 
         <div class="form-section-title">Line Items</div>
+
+        <div class="mb-3" style="position:relative;max-width:420px;">
+            <label class="form-label">Search Products to Add</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="quickSearchInput" class="form-control" autocomplete="off" placeholder="Search by product name or code…">
+            </div>
+            <div id="quickSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:#fff;border:1px solid #dee2e6;border-radius:6px;max-height:260px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+        </div>
+
         <div class="table-responsive">
             <table class="table" id="itemsTable">
                 <thead>
@@ -95,18 +105,43 @@
         });
     }
 
-    document.getElementById('addItemBtn').addEventListener('click', () => {
-        const row = tbody.querySelector('tr').cloneNode(true);
+    function fillRow(row, prefill) {
+        row.querySelector('.product-search-input').value = prefill.code;
+        row.querySelector('[name$="[product_description]"]').value = prefill.desc;
+        row.querySelector('[name$="[qty]"]').value = 1;
+        row.querySelector('[name$="[unit_price]"]').value = prefill.price;
+    }
+
+    function addRow(prefill) {
+        // If the only row on the page is still completely blank, fill it in
+        // directly instead of leaving an empty row above the new one.
+        const firstRow = tbody.querySelector('tr');
+        const isFirstRowEmpty = tbody.querySelectorAll('tr').length === 1
+            && !firstRow.querySelector('[name$="[product_code]"]').value;
+
+        if (prefill && isFirstRowEmpty) {
+            fillRow(firstRow, prefill);
+            return;
+        }
+
+        const row = firstRow.cloneNode(true);
         row.querySelectorAll('input').forEach(input => {
             input.value = input.name.includes('[discount]') ? '0' : '';
             input.name = input.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
         });
         row.querySelector('.product-search-results').style.display = 'none';
         row.querySelector('.product-search-results').innerHTML = '';
+
+        if (prefill) {
+            fillRow(row, prefill);
+        }
+
         tbody.appendChild(row);
         itemIndex++;
         wireRemoveButtons();
-    });
+    }
+
+    document.getElementById('addItemBtn').addEventListener('click', () => addRow(null));
 
     wireRemoveButtons();
 
@@ -165,8 +200,57 @@
     });
 
     document.addEventListener('click', (e) => {
-        if (e.target.closest('.product-search-wrap')) return;
+        if (e.target.closest('.product-search-wrap') || e.target.closest('#quickSearchInput')) return;
         tbody.querySelectorAll('.product-search-results').forEach(box => box.style.display = 'none');
+        quickSearchResults.style.display = 'none';
+    });
+
+    // ── Standalone "search then add a new row" box above the table ──
+    const quickSearchInput = document.getElementById('quickSearchInput');
+    const quickSearchResults = document.getElementById('quickSearchResults');
+    let quickSearchTimer = null;
+
+    quickSearchInput.addEventListener('input', () => {
+        const query = quickSearchInput.value.trim();
+        clearTimeout(quickSearchTimer);
+
+        if (query.length < 2) {
+            quickSearchResults.style.display = 'none';
+            quickSearchResults.innerHTML = '';
+            return;
+        }
+
+        quickSearchTimer = setTimeout(() => {
+            fetch(`{{ route('products.search') }}?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(products => {
+                    if (!products.length) {
+                        quickSearchResults.innerHTML = '<div class="p-2 text-muted" style="font-size:.82rem;">No products found</div>';
+                        quickSearchResults.style.display = 'block';
+                        return;
+                    }
+
+                    quickSearchResults.innerHTML = products.map(p => `
+                        <div class="quick-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
+                             data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
+                            <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
+                            <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}</div>
+                        </div>
+                    `).join('');
+                    quickSearchResults.style.display = 'block';
+                });
+        }, 250);
+    });
+
+    quickSearchResults.addEventListener('click', (e) => {
+        const item = e.target.closest('.quick-search-item');
+        if (!item) return;
+
+        addRow({ code: item.dataset.code, desc: item.dataset.desc, price: item.dataset.price });
+
+        quickSearchInput.value = '';
+        quickSearchResults.style.display = 'none';
+        quickSearchResults.innerHTML = '';
     });
 })();
 </script>
