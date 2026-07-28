@@ -42,4 +42,14 @@ class SalesOrderItem extends Model
     {
         return $this->qty_allocated >= $this->qty_ordered;
     }
+
+    public function backorderedQty(): int
+    {
+        return max($this->qty_ordered - $this->qty_allocated, 0);
+    }
+
+    public function isBackordered(): bool
+    {
+        return $this->backorderedQty() > 0;
+    }
 }

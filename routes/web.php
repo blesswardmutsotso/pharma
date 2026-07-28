@@ -134,6 +134,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/sales-orders/{salesOrder}/pdf', [SalesOrderController::class, 'pdf'])->name('sales-orders.pdf');
     Route::post('/sales-orders/{salesOrder}/confirm',       [SalesOrderController::class, 'confirm'])->name('sales-orders.confirm');
+    Route::post('/sales-orders/{salesOrder}/allocate-remaining', [SalesOrderController::class, 'allocateRemaining'])->name('sales-orders.allocate-remaining');
     Route::post('/sales-orders/{salesOrder}/start-picking', [SalesOrderController::class, 'startPicking'])->name('sales-orders.start-picking');
     Route::get('/sales-orders/{salesOrder}/picking-list',   [SalesOrderController::class, 'pickingList'])->name('sales-orders.picking-list');
     Route::post('/sales-orders/{salesOrder}/dispatch',      [SalesOrderController::class, 'dispatch'])->name('sales-orders.dispatch');

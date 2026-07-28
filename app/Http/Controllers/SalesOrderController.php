@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 class SalesOrderController extends Controller implements HasMiddleware
 {
@@ -29,7 +28,7 @@ class SalesOrderController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('role:admin,manager,sales', only: ['create', 'store']),
-            new Middleware('role:admin,manager,supervisor,sales', only: ['confirm', 'cancel']),
+            new Middleware('role:admin,manager,supervisor,sales', only: ['confirm', 'cancel', 'allocateRemaining']),
             new Middleware('role:admin,manager,supervisor,sales,warehouse', only: ['startPicking', 'dispatch', 'returnItem']),
         ];
     }
@@ -177,22 +176,52 @@ class SalesOrderController extends Controller implements HasMiddleware
             ));
         }
 
-        try {
-            DB::transaction(function () use ($salesOrder, $fefo) {
-                foreach ($salesOrder->items as $item) {
-                    $fefo->allocate($item);
-                }
+        DB::transaction(function () use ($salesOrder, $fefo) {
+            foreach ($salesOrder->items as $item) {
+                $fefo->allocate($item);
+            }
 
-                $salesOrder->update([
-                    'status' => SalesOrder::STATUS_CONFIRMED,
-                    'confirmed_by' => auth()->id(),
-                ]);
-            });
-        } catch (RuntimeException $e) {
-            return back()->with('error', $e->getMessage());
+            $salesOrder->update([
+                'status' => SalesOrder::STATUS_CONFIRMED,
+                'confirmed_by' => auth()->id(),
+            ]);
+        });
+
+        $backordered = $salesOrder->items->filter->isBackordered();
+
+        if ($backordered->isNotEmpty()) {
+            $lines = $backordered->map(fn (SalesOrderItem $i) => "{$i->product_code} ({$i->backorderedQty()} short)")->implode(', ');
+
+            return back()->with('success', "Sales order confirmed. Stock allocated where available — backordered: {$lines}. Use \"Allocate Remaining Stock\" once more stock arrives.");
         }
 
-        return back()->with('success', 'Sales order confirmed and stock allocated (FEFO).');
+        return back()->with('success', 'Sales order confirmed and stock fully allocated (FEFO).');
+    }
+
+    /**
+     * Re-attempt FEFO allocation for any items still short on stock —
+     * lets a backordered order be topped up once new stock arrives (e.g.
+     * after a follow-up GRN) without needing to raise a new order.
+     */
+    public function allocateRemaining(SalesOrder $salesOrder, FefoAllocationService $fefo)
+    {
+        if (!in_array($salesOrder->status, [SalesOrder::STATUS_CONFIRMED, SalesOrder::STATUS_PICKING], true)) {
+            return back()->with('error', 'Only confirmed or picking orders can have backorders allocated.');
+        }
+
+        DB::transaction(function () use ($salesOrder, $fefo) {
+            foreach ($salesOrder->items as $item) {
+                $fefo->allocate($item);
+            }
+        });
+
+        $stillBackordered = $salesOrder->items->filter->isBackordered();
+
+        if ($stillBackordered->isNotEmpty()) {
+            return back()->with('success', 'Allocated whatever new stock was available — some items are still backordered.');
+        }
+
+        return back()->with('success', 'All previously backordered items are now fully allocated.');
     }
 
     public function startPicking(SalesOrder $salesOrder)

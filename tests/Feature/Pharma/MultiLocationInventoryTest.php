@@ -75,7 +75,7 @@ class MultiLocationInventoryTest extends TestCase
         $this->assertSame(25, $product->fresh()->quantity);
     }
 
-    public function test_sales_order_scoped_to_a_branch_only_allocates_from_that_branchs_batches(): void
+    public function test_sales_order_scoped_to_a_branch_backorders_when_that_branch_has_no_stock(): void
     {
         $this->actingAsAuthenticatedUser();
         $home = Branch::homeOrNull();
@@ -112,8 +112,11 @@ class MultiLocationInventoryTest extends TestCase
         $response = $this->post("/sales-orders/{$so->id}/confirm");
 
         $response->assertRedirect();
-        $this->assertSame(SalesOrder::STATUS_DRAFT, $so->fresh()->status);
-        $this->assertStringContainsString('Insufficient stock', session('error'));
+        $this->assertSame(SalesOrder::STATUS_CONFIRMED, $so->fresh()->status);
+
+        $item = $so->items()->first();
+        $this->assertSame(0, $item->qty_allocated);
+        $this->assertSame(10, $item->backorderedQty());
     }
 
     public function test_outgoing_transfer_between_branches_moves_the_batch_and_preserves_its_identity(): void

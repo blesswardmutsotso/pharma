@@ -94,7 +94,7 @@ class SalesOrderFefoTest extends TestCase
         $this->assertSame(10, $newBatch->qty_reserved);
     }
 
-    public function test_confirming_a_sales_order_fails_when_stock_is_insufficient(): void
+    public function test_confirming_a_sales_order_with_insufficient_stock_partially_allocates_and_backorders_the_rest(): void
     {
         $this->actingAsAuthenticatedUser();
         $client = $this->createClient();
@@ -113,8 +113,69 @@ class SalesOrderFefoTest extends TestCase
 
         $this->post("/sales-orders/{$so->id}/confirm")->assertRedirect();
 
-        $this->assertSame(SalesOrder::STATUS_DRAFT, $so->fresh()->status);
-        $this->assertSame(0, $so->items()->first()->qty_allocated);
+        // Confirms even though stock is short — no more hard block.
+        $this->assertSame(SalesOrder::STATUS_CONFIRMED, $so->fresh()->status);
+
+        $item = $so->items()->first();
+        $this->assertSame(5, $item->qty_allocated);
+        $this->assertSame(5, $item->backorderedQty());
+        $this->assertTrue($item->isBackordered());
+    }
+
+    public function test_confirming_a_sales_order_with_zero_stock_confirms_with_a_full_backorder(): void
+    {
+        $this->actingAsAuthenticatedUser();
+        $client = $this->createClient();
+
+        Stock::factory()->create(['product_code' => 'PRD-SO-ZERO', 'quantity' => 0]);
+
+        $so = $this->createSalesOrder($client, 'PRD-SO-ZERO', 20);
+
+        $this->post("/sales-orders/{$so->id}/confirm")->assertRedirect();
+
+        $this->assertSame(SalesOrder::STATUS_CONFIRMED, $so->fresh()->status);
+
+        $item = $so->items()->first();
+        $this->assertSame(0, $item->qty_allocated);
+        $this->assertSame(20, $item->backorderedQty());
+    }
+
+    public function test_allocate_remaining_fills_a_backorder_once_more_stock_arrives(): void
+    {
+        $this->actingAsAuthenticatedUser();
+        $client = $this->createClient();
+
+        Stock::factory()->create(['product_code' => 'PRD-SO-TOPUP', 'quantity' => 0]);
+        StockBatch::create([
+            'product_code' => 'PRD-SO-TOPUP',
+            'batch_number' => 'FIRST',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 4,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
+
+        $so = $this->createSalesOrder($client, 'PRD-SO-TOPUP', 10);
+        $this->post("/sales-orders/{$so->id}/confirm");
+
+        $item = $so->items()->first();
+        $this->assertSame(4, $item->fresh()->qty_allocated);
+
+        // New stock arrives via a follow-up GRN-equivalent batch.
+        StockBatch::create([
+            'product_code' => 'PRD-SO-TOPUP',
+            'batch_number' => 'SECOND',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 6,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
+
+        $response = $this->post("/sales-orders/{$so->id}/allocate-remaining");
+        $response->assertRedirect();
+
+        $this->assertSame(10, $item->fresh()->qty_allocated);
+        $this->assertFalse($item->fresh()->isBackordered());
     }
 
     public function test_confirming_a_sales_order_is_blocked_when_it_would_exceed_the_clients_credit_limit(): void

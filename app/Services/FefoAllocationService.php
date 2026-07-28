@@ -5,17 +5,18 @@ namespace App\Services;
 use App\Models\SalesOrderItem;
 use App\Models\SalesOrderItemBatch;
 use App\Models\StockBatch;
-use RuntimeException;
 
 class FefoAllocationService
 {
     /**
      * Reserve stock for a sales order line using First-Expiry-First-Out
      * ordering, splitting across batches if one alone doesn't cover the qty.
-     * Throws if there isn't enough available stock — callers should check
-     * availableQtyFor() first if they want to fail without a transaction.
      *
-     * @throws RuntimeException
+     * Deliberately allows selling below available stock (BRD: backorders):
+     * allocates as much as is on hand and leaves the rest unallocated
+     * rather than failing the whole order — qty_ordered - qty_allocated is
+     * the backordered quantity, fillable later by calling this again once
+     * more stock arrives (e.g. via a new GRN).
      */
     public function allocate(SalesOrderItem $item): void
     {
@@ -26,10 +27,6 @@ class FefoAllocationService
         }
 
         $branchId = $item->salesOrder?->branch_id;
-
-        if ($this->availableQtyFor($item->product_code, $branchId) < $needed) {
-            throw new RuntimeException("Insufficient stock for {$item->product_code} to fulfil this order.");
-        }
 
         $remaining = $needed;
         $batches = StockBatch::where('product_code', $item->product_code)->atBranch($branchId)->orderedForFefo()->get();

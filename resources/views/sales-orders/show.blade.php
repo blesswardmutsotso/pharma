@@ -34,6 +34,13 @@
                 <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check2-circle me-1"></i>Confirm &amp; Allocate Stock (FEFO)</button>
             </form>
         @endif
+        @if (in_array($salesOrder->status, ['confirmed', 'picking']) && $salesOrder->items->contains(fn ($i) => $i->isBackordered()))
+            <form action="{{ route('sales-orders.allocate-remaining', $salesOrder) }}" method="POST"
+                  data-confirm="Re-check stock and allocate anything now available for backordered lines?" data-confirm-icon="question">
+                @csrf
+                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Allocate Remaining Stock</button>
+            </form>
+        @endif
         @if ($salesOrder->canStartPicking())
             <form action="{{ route('sales-orders.start-picking', $salesOrder) }}" method="POST">
                 @csrf
@@ -78,7 +85,12 @@
                         <tr>
                             <td>{{ $item->product_code }} — {{ $item->product_description }}</td>
                             <td class="text-center">{{ $item->qty_ordered }}</td>
-                            <td class="text-center">{{ $item->qty_allocated }}</td>
+                            <td class="text-center">
+                                {{ $item->qty_allocated }}
+                                @if ($item->isBackordered())
+                                    <span class="badge-status badge-pending" title="Backordered">{{ $item->backorderedQty() }} short</span>
+                                @endif
+                            </td>
                             <td class="text-center">{{ $item->qty_dispatched }}</td>
                             <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
                             <td class="text-end">{{ number_format($item->line_total, 2) }}</td>
