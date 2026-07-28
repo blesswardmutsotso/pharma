@@ -135,14 +135,14 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     public function show(SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'branch', 'items.batchAllocations.stockBatch']);
+        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch']);
 
         return view('sales-orders.show', compact('salesOrder'));
     }
 
     public function pdf(Request $request, SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'branch', 'items']);
+        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items']);
 
         $isDuplicate = $salesOrder->print_count > 0;
         $salesOrder->increment('print_count');

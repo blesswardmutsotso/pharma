@@ -80,6 +80,24 @@ class SalesInvoicingTest extends TestCase
         $this->assertNotNull($item->expiry_date);
     }
 
+    public function test_sales_order_and_invoice_record_the_logged_in_users_name(): void
+    {
+        $user = $this->actingAsAuthenticatedUser();
+        $so = $this->createDispatchedSalesOrder('PRD-INV-USER', 5, 5.00);
+
+        $this->assertSame($user->id, $so->created_by);
+        $this->assertSame($user->name, $so->createdBy->name);
+        $this->assertSame($user->id, $so->confirmed_by);
+        $this->assertSame($user->name, $so->confirmedBy->name);
+
+        $invoice = $so->invoice;
+        $this->assertSame($user->id, $invoice->created_by);
+        $this->assertSame($user->name, $invoice->createdBy->name);
+
+        $this->get(route('sales-orders.show', $so))->assertSeeText($user->name);
+        $this->get(route('sales-invoices.show', $invoice))->assertSeeText($user->name);
+    }
+
     public function test_full_payment_settles_invoice_and_completes_sales_order(): void
     {
         $this->actingAsAuthenticatedUser();

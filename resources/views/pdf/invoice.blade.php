@@ -107,8 +107,8 @@
 </div>
 
 <div class="signatures">
-    <div>Authorised By: ______________________</div>
-    <div>Date: ______________________</div>
+    <div>Authorised By: {{ $invoice->createdBy?->name ?? '______________________' }}</div>
+    <div>Date: {{ $invoice->invoice_date?->format('Y-m-d') }}</div>
 </div>
 
 </body>

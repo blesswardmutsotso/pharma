@@ -23,6 +23,8 @@
             <div><div class="label">Required Date</div><div class="value">{{ $salesOrder->required_date?->format('Y-m-d') ?? '—' }}</div></div>
             <div><div class="label">Dispatched At</div><div class="value">{{ $salesOrder->dispatched_at?->format('Y-m-d H:i') ?? '—' }}</div></div>
             <div><div class="label">Fulfilling Branch</div><div class="value">{{ $salesOrder->branch?->name ?? '—' }}</div></div>
+            <div><div class="label">Created By</div><div class="value">{{ $salesOrder->createdBy?->name ?? '—' }}</div></div>
+            <div><div class="label">Confirmed By</div><div class="value">{{ $salesOrder->confirmedBy?->name ?? '—' }}</div></div>
         </div>
     </div>
 

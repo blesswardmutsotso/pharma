@@ -25,6 +25,7 @@
             <div><div class="label">Invoice Date</div><div class="value">{{ $salesInvoice->invoice_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Due Date</div><div class="value">{{ $salesInvoice->due_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Balance Due</div><div class="value {{ $salesInvoice->balance() > 0 ? 'text-danger' : 'text-success' }}">${{ number_format($salesInvoice->balance(), 2) }}</div></div>
+            <div><div class="label">Issued By</div><div class="value">{{ $salesInvoice->createdBy?->name ?? '—' }}</div></div>
         </div>
     </div>
 

@@ -68,14 +68,14 @@ class SalesInvoiceController extends Controller
 
     public function show(SalesInvoice $salesInvoice)
     {
-        $salesInvoice->load(['client', 'items', 'creditNotes', 'paymentAllocations.payment']);
+        $salesInvoice->load(['client', 'createdBy', 'items', 'creditNotes', 'paymentAllocations.payment']);
 
         return view('sales-invoices.show', compact('salesInvoice'));
     }
 
     public function pdf(Request $request, SalesInvoice $salesInvoice)
     {
-        $salesInvoice->load(['client', 'items', 'salesOrder.branch']);
+        $salesInvoice->load(['client', 'createdBy', 'items', 'salesOrder.branch']);
 
         $isDuplicate = $salesInvoice->print_count > 0;
         $salesInvoice->increment('print_count');

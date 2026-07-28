@@ -83,8 +83,8 @@
 @endif
 
 <div class="signatures">
-    <div>Authorised By: ______________________</div>
-    <div>Date: ______________________</div>
+    <div>Authorised By: {{ $salesOrder->confirmedBy?->name ?? $salesOrder->createdBy?->name ?? '______________________' }}</div>
+    <div>Date: {{ $salesOrder->order_date?->format('Y-m-d') }}</div>
 </div>
 
 </body>
