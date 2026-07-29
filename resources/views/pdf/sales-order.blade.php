@@ -27,11 +27,16 @@
 @endif
 
 <div class="header">
-    <div>
-        <div class="company">{{ config('company.name') }}</div>
-        <div style="font-size:9px;color:#6c757d;">
-            {{ config('company.address') }}
-            @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
+    <div style="display:flex;align-items:center;gap:10px;">
+        @if (file_exists(public_path('logo.png')))
+            <img src="{{ public_path('logo.png') }}" style="width:48px;height:48px;object-fit:contain;">
+        @endif
+        <div>
+            <div class="company">{{ config('company.name') }}</div>
+            <div style="font-size:9px;color:#6c757d;">
+                {{ config('company.address') }}
+                @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
+            </div>
         </div>
     </div>
     <div>
