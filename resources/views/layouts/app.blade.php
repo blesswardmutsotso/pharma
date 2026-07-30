@@ -51,15 +51,14 @@
            at all" in practice. Native + explicit ::-webkit-scrollbar /
            scrollbar-color styling stays reliably visible. */
         .app-sidebar {
-            border-right: 1px solid #000;
-            background: #14161a !important;
+            border-right: 1px solid #e9ecef;
         }
 
         .sidebar-wrapper {
             overflow-y: scroll;
             overflow-x: hidden;
             scrollbar-width: thin;
-            scrollbar-color: var(--pos-green, #198754) #14161a;
+            scrollbar-color: var(--pos-green, #198754) #f1f3f5;
         }
 
         /* Chromium/WebKit — Firefox uses the scrollbar-width/-color pair above */
@@ -67,54 +66,46 @@
             width: 8px;
         }
         .sidebar-wrapper::-webkit-scrollbar-track {
-            background: #14161a;
+            background: #f1f3f5;
         }
         .sidebar-wrapper::-webkit-scrollbar-thumb {
             background-color: var(--pos-green, #198754);
             border-radius: 8px;
-            border: 2px solid #14161a;
+            border: 2px solid #f1f3f5;
         }
         .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
-            background-color: #20c974;
+            background-color: #145c2d;
         }
 
         .sidebar-logo img            { transition: transform .2s ease; }
         .sidebar-logo img:hover      { transform: scale(1.05); }
 
-        .sidebar-menu .nav-header {
-            color: #6c7680 !important;
-        }
-
         /* nav links default */
         .sidebar-menu .nav-link {
-            color: #c3c9d1 !important;
+            color: #3d5a3d !important;
             border-left: 3px solid transparent;
-            transition: background .15s, border-color .15s, color .15s;
-        }
-
-        .sidebar-menu .nav-link .nav-icon {
-            color: #20c974 !important;
+            transition: background .15s, border-color .15s;
         }
 
         .sidebar-menu .nav-link:hover {
-            background: rgba(32, 201, 116, .12) !important;
+            background: var(--pos-green-light) !important;
             border-left: 3px solid var(--pos-green);
         }
 
         .sidebar-menu .nav-link:hover .nav-icon,
         .sidebar-menu .nav-link:hover p {
-            color: #ffffff !important;
+            color: var(--pos-green-dk) !important;
         }
 
         /* active link */
         .sidebar-menu .nav-link.active-page {
-            background: rgba(32, 201, 116, .18) !important;
+            background: var(--pos-green-light) !important;
             border-left: 3px solid var(--pos-green);
         }
 
         .sidebar-menu .nav-link.active-page .nav-icon,
         .sidebar-menu .nav-link.active-page p {
-            color: #ffffff !important;
+            color: var(--pos-green-dk) !important;
             font-weight: 600;
         }
 
@@ -267,7 +258,7 @@
     {{-- ═══════════════════════════════════
          SIDEBAR
     ════════════════════════════════════ --}}
-    <aside class="app-sidebar bg-dark shadow" data-bs-theme="dark">
+    <aside class="app-sidebar bg-white shadow" data-bs-theme="light">
         <div class="sidebar-wrapper">
             <nav class="mt-2">
 
