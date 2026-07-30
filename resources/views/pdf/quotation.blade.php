@@ -85,6 +85,8 @@
     </tfoot>
 </table>
 
+@include('pdf.partials.banking-details')
+
 <p style="margin-top:20px;font-size:10px;color:#6c757d;">This quotation is valid until the date shown above. Prices are subject to stock availability at time of order confirmation.</p>
 
 </body>
