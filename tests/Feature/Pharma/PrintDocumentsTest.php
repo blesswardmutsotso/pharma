@@ -160,12 +160,14 @@ class PrintDocumentsTest extends TestCase
         config([
             'company.phone_sales' => '+263771234567',
             'company.email_sales' => 'sales@quvapharmaceuticals.co.zw',
-            'company.bank_name' => 'Crown Bank',
-            'company.bank_account_name' => 'Quva Pharmaceuticals',
+            'company.bank_name' => 'Crown Bank Limited',
+            'company.bank_branch' => 'Africa Unity Square',
+            'company.bank_branch_code' => '701',
+            'company.bank_swift_code' => 'SCBLZWHXXX',
+            'company.bank_address' => '68 Nelson Mandela Avenue, Harare, Zimbabwe',
+            'company.bank_account_name' => 'Quva Pharmaceuticals Private Limited',
             'company.bank_account_number' => '4167859920000',
-            'company.zig_bank_name' => 'CBZ Bank',
-            'company.zig_bank_account_name' => 'Quva Pharmaceuticals',
-            'company.zig_bank_account_number' => '01234567890',
+            'company.zig_bank_account_number' => '0167859920000',
         ]);
 
         $this->actingAsAdmin();
@@ -194,8 +196,13 @@ class PrintDocumentsTest extends TestCase
 
         $this->assertStringContainsString('+263771234567', $html);
         $this->assertStringContainsString('sales@quvapharmaceuticals.co.zw', $html);
-        $this->assertStringContainsString('ZiG', $html);
-        $this->assertStringContainsString('CBZ Bank', $html);
+        $this->assertStringContainsString('Crown Bank Limited', $html);
+        $this->assertStringContainsString('Africa Unity Square', $html);
+        $this->assertStringContainsString('SCBLZWHXXX', $html);
+        $this->assertStringContainsString('68 Nelson Mandela Avenue', $html);
+        $this->assertStringContainsString('4167859920000', $html);
+        $this->assertStringContainsString('0167859920000', $html);
+        $this->assertStringContainsString('ZWG', $html);
     }
 
     public function test_stock_adjustment_pdf_renders(): void

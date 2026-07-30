@@ -16,10 +16,12 @@ return [
     'vendor_number' => env('COMPANY_VENDOR_NUMBER', ''),
 
     'bank_name'           => env('COMPANY_BANK_NAME', ''),
+    'bank_branch'         => env('COMPANY_BANK_BRANCH', ''),
+    'bank_branch_code'    => env('COMPANY_BANK_BRANCH_CODE', ''),
+    'bank_swift_code'     => env('COMPANY_BANK_SWIFT_CODE', ''),
+    'bank_address'        => env('COMPANY_BANK_ADDRESS', ''),
     'bank_account_name'   => env('COMPANY_BANK_ACCOUNT_NAME', ''),
     'bank_account_number' => env('COMPANY_BANK_ACCOUNT_NUMBER', ''),
 
-    'zig_bank_name'           => env('COMPANY_ZIG_BANK_NAME', ''),
-    'zig_bank_account_name'   => env('COMPANY_ZIG_BANK_ACCOUNT_NAME', ''),
     'zig_bank_account_number' => env('COMPANY_ZIG_BANK_ACCOUNT_NUMBER', ''),
 ];
