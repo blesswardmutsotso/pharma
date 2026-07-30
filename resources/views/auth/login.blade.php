@@ -64,7 +64,7 @@
         /* ── HEADER ── */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 64px; background: rgba(255,255,255,0.94); border-bottom: 1.5px solid var(--border2); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(59,130,246,0.08); }
         .header-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .header-logo-box { width: 52px; height: 52px; background: linear-gradient(135deg, var(--accent), #2563eb); border-radius: 12px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px; color: #fff; flex-shrink: 0; box-shadow: 0 3px 10px rgba(59,130,246,0.35); }
+        .header-logo-box { width: 52px; height: 52px; background: #fff; border: 1px solid var(--border2); border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 3px 10px rgba(184,3,48,0.12); padding: 6px; }
         .header-name { font-size: 19px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; }
         .header-name span { color: var(--accent); }
         .header-right { display: flex; align-items: center; gap: 12px; }
@@ -107,8 +107,8 @@
         /* card header */
         .card-header { text-align: center; margin-bottom: 24px; }
         .card-logo-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
-        .card-logo { width: 110px; height: 110px; background: linear-gradient(135deg, var(--accent), #2563eb); border-radius: 24px; display: inline-grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: #fff; box-shadow: 0 12px 40px rgba(59,130,246,0.4); position: relative; z-index: 1; }
-        .card-logo-wrap::before { content: ''; position: absolute; inset: -8px; border-radius: 32px; border: 2px dashed rgba(96,165,250,0.4); animation: spin 14s linear infinite; }
+        .card-logo { width: 220px; height: 92px; background: #fff; border-radius: 20px; display: inline-grid; place-items: center; padding: 10px 16px; box-shadow: 0 12px 40px rgba(184,3,48,0.18); position: relative; z-index: 1; }
+        .card-logo-wrap::before { content: ''; position: absolute; inset: -8px; border-radius: 28px; border: 2px dashed rgba(184,3,48,0.3); animation: spin 14s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .card-title { font-size: 23px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; margin-bottom: 5px; }
         .card-subtitle { font-size: 13px; color: var(--muted); }
@@ -195,8 +195,8 @@
 
         .demo-hd { text-align: center; margin-bottom: 28px; }
         .demo-hd-logo-wrap { position: relative; display: inline-block; margin-bottom: 14px; }
-        .demo-hd-logo { width: 86px; height: 86px; background: linear-gradient(135deg, var(--accent), #2563eb); border-radius: 22px; display: inline-grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #fff; box-shadow: 0 8px 28px rgba(59,130,246,0.38); position: relative; z-index: 1; }
-        .demo-hd-logo-wrap::before { content: ''; position: absolute; inset: -7px; border-radius: 28px; border: 2px dashed rgba(96,165,250,0.4); animation: spin 14s linear infinite; }
+        .demo-hd-logo { width: 86px; height: 86px; background: #fff; border: 1px solid var(--border2); border-radius: 22px; display: inline-grid; place-items: center; box-shadow: 0 8px 28px rgba(184,3,48,0.18); position: relative; z-index: 1; padding: 8px; }
+        .demo-hd-logo-wrap::before { content: ''; position: absolute; inset: -7px; border-radius: 28px; border: 2px dashed rgba(184,3,48,0.3); animation: spin 14s linear infinite; }
         .demo-hd-title { font-size: 22px; font-weight: 800; color: var(--dark); letter-spacing: -0.4px; margin-bottom: 5px; }
         .demo-hd-sub   { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
         .demo-badges   { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
@@ -313,7 +313,7 @@
             $companyNameParts = explode(' ', config('company.name'), 2);
         @endphp
         <a class="header-brand" href="#">
-            <div class="header-logo-box"><img src="{{ asset('logo.png') }}" alt="{{ config('company.name') }}" style="width:40px;height:40px;object-fit:contain;"></div>
+            <div class="header-logo-box"><img src="{{ asset('logo-square.png') }}" alt="{{ config('company.name') }}" style="width:100%;height:100%;object-fit:contain;"></div>
             <span class="header-name">{{ $companyNameParts[0] }} <span>{{ $companyNameParts[1] ?? '' }}</span></span>
         </a>
         <div class="header-right">
@@ -352,7 +352,7 @@
 
                 <div class="card-header">
                     <div class="card-logo-wrap">
-                        <div class="card-logo"><img src="{{ asset('logo.png') }}" alt="{{ config('company.name') }}" style="width:88px;height:88px;object-fit:contain;"></div>
+                        <div class="card-logo"><img src="{{ asset('logo.png') }}" alt="{{ config('company.name') }}" style="width:100%;height:100%;object-fit:contain;"></div>
                     </div>
                     <div class="card-title">Welcome back</div>
                     <div class="card-subtitle">Sign in to your {{ config('company.name') }} account</div>
@@ -433,7 +433,7 @@
         <!-- header -->
         <div class="demo-hd">
             <div class="demo-hd-logo-wrap">
-                <div class="demo-hd-logo"><img src="{{ asset('logo.png') }}" alt="Leaf Light" style="width:68px;height:68px;object-fit:contain;"></div>
+                <div class="demo-hd-logo"><img src="{{ asset('logo-square.png') }}" alt="{{ config('company.name') }}" style="width:100%;height:100%;object-fit:contain;"></div>
             </div>
             <div class="demo-hd-title">Book a Free Demo</div>
             <div class="demo-hd-sub">Schedule a personalised Leaf Light Systems walkthrough with our team</div>

@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>@yield('title', 'POS')</title>
-    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('logo-square.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -44,19 +44,19 @@
         .modal-body { max-height: 70vh; overflow-y: auto; }
 
         /* ── Sidebar ────────────────────────────────────────────── */
+        /* AdminLTE's own `.sidebar-expand-lg.layout-fixed .app-sidebar` rule
+           already makes the sidebar `position: sticky` (participating in the
+           app-wrapper CSS grid, unlike `fixed` which breaks the grid and
+           overlays the content) with a height-constrained, scrollable
+           .sidebar-wrapper. We only need to guarantee overflow behaves even
+           if the OverlayScrollbars JS below doesn't manage to initialize. */
         .app-sidebar {
             border-right: 1px solid #e9ecef;
-            position: fixed !important;
-            top: 0;
-            bottom: 0;
-            height: 100vh !important;
         }
 
         .sidebar-wrapper {
-            height: calc(100vh - 3.5rem) !important;
-            max-height: calc(100vh - 3.5rem) !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .sidebar-logo img            { transition: transform .2s ease; }
@@ -247,7 +247,7 @@
                 {{-- Logo --}}
                 <div class="sidebar-logo text-center py-3">
                     <a href="{{ route('dashboard') }}">
-                        <img src="{{ asset('logo.png') }}" alt="Logo"
+                        <img src="{{ asset('logo-square.png') }}" alt="Logo"
                              class="img-fluid rounded-circle" style="max-height: 90px;">
                     </a>
                 </div>
