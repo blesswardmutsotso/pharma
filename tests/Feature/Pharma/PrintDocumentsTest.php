@@ -5,6 +5,7 @@ namespace Tests\Feature\Pharma;
 use App\Models\Client;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
+use App\Models\SalesInvoice;
 use App\Models\SalesOrder;
 use App\Models\Stock;
 use App\Models\StockBatch;
@@ -152,6 +153,49 @@ class PrintDocumentsTest extends TestCase
         $response = $this->get("/sales-invoices/{$invoice->id}/pdf");
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_invoice_pdf_includes_contact_details_and_zig_bank_account(): void
+    {
+        config([
+            'company.phone_sales' => '+263771234567',
+            'company.email_sales' => 'sales@quvapharmaceuticals.co.zw',
+            'company.bank_name' => 'Crown Bank',
+            'company.bank_account_name' => 'Quva Pharmaceuticals',
+            'company.bank_account_number' => '4167859920000',
+            'company.zig_bank_name' => 'CBZ Bank',
+            'company.zig_bank_account_name' => 'Quva Pharmaceuticals',
+            'company.zig_bank_account_number' => '01234567890',
+        ]);
+
+        $this->actingAsAdmin();
+        $client = Client::create(['name' => 'ZiG PDF Client']);
+        $so = SalesOrder::create([
+            'so_number' => 'SO-ZIG-PDF',
+            'client_id' => $client->id,
+            'order_date' => now()->toDateString(),
+            'status' => SalesOrder::STATUS_INVOICED,
+        ]);
+        $invoice = SalesInvoice::create([
+            'invoice_number' => 'INV-ZIG-PDF',
+            'sales_order_id' => $so->id,
+            'client_id' => $client->id,
+            'invoice_date' => now()->toDateString(),
+            'due_date' => now()->addDays(30)->toDateString(),
+            'status' => SalesInvoice::STATUS_UNPAID,
+            'subtotal' => 10, 'tax_total' => 0, 'total' => 10,
+        ]);
+
+        $html = view('pdf.invoice', [
+            'invoice' => $invoice,
+            'isDuplicate' => false,
+            'qrImage' => 'data:image/svg+xml;base64,',
+        ])->render();
+
+        $this->assertStringContainsString('+263771234567', $html);
+        $this->assertStringContainsString('sales@quvapharmaceuticals.co.zw', $html);
+        $this->assertStringContainsString('ZiG', $html);
+        $this->assertStringContainsString('CBZ Bank', $html);
     }
 
     public function test_stock_adjustment_pdf_renders(): void

@@ -40,6 +40,9 @@
                 {{ config('company.address') }}
                 @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
                 @if (config('company.vendor_number')) &nbsp;·&nbsp; Vendor No: {{ config('company.vendor_number') }} @endif
+                <br>
+                @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
+                @if (config('company.email_sales') ?: config('company.email')) &nbsp;·&nbsp; {{ config('company.email_sales') ?: config('company.email') }} @endif
             </div>
         </div>
     </div>
@@ -97,12 +100,25 @@
     </tfoot>
 </table>
 
-@if (config('company.bank_name'))
+@if (config('company.bank_name') || config('company.zig_bank_name'))
     <div style="margin-top:15px;font-size:10px;">
         <strong>Payment Details</strong><br>
-        Bank: {{ config('company.bank_name') }} &nbsp;·&nbsp;
-        Account Name: {{ config('company.bank_account_name') }} &nbsp;·&nbsp;
-        Account Number: {{ config('company.bank_account_number') }}
+        @if (config('company.bank_name'))
+            <div style="margin-top:3px;">
+                <strong>USD:</strong>
+                Bank: {{ config('company.bank_name') }} &nbsp;·&nbsp;
+                Account Name: {{ config('company.bank_account_name') }} &nbsp;·&nbsp;
+                Account Number: {{ config('company.bank_account_number') }}
+            </div>
+        @endif
+        @if (config('company.zig_bank_name'))
+            <div style="margin-top:3px;">
+                <strong>ZiG:</strong>
+                Bank: {{ config('company.zig_bank_name') }} &nbsp;·&nbsp;
+                Account Name: {{ config('company.zig_bank_account_name') }} &nbsp;·&nbsp;
+                Account Number: {{ config('company.zig_bank_account_number') }}
+            </div>
+        @endif
     </div>
 @endif
 
