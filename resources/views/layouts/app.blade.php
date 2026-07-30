@@ -46,12 +46,17 @@
         /* ── Sidebar ────────────────────────────────────────────── */
         .app-sidebar {
             border-right: 1px solid #e9ecef;
+            position: fixed !important;
+            top: 0;
+            bottom: 0;
+            height: 100vh !important;
         }
 
         .sidebar-wrapper {
-            height: calc(100vh - 3.5rem);
-            overflow-y: auto;
-            overflow-x: hidden;
+            height: calc(100vh - 3.5rem) !important;
+            max-height: calc(100vh - 3.5rem) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
 
         .sidebar-logo img            { transition: transform .2s ease; }

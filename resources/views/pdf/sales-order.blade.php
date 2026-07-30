@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <style>
     body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #212529; }
-    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #198754; padding-bottom: 10px; margin-bottom: 15px; }
-    .company { font-size: 18px; font-weight: bold; color: #145c2d; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #b80330; padding-bottom: 10px; margin-bottom: 15px; }
+    .company { font-size: 18px; font-weight: bold; color: #b80330; }
     .doc-title { font-size: 20px; font-weight: bold; text-align: right; color: #212529; }
     .doc-number { font-size: 13px; text-align: right; color: #6c757d; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
