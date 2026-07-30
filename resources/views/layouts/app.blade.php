@@ -55,8 +55,26 @@
         }
 
         .sidebar-wrapper {
-            overflow-y: auto;
+            overflow-y: scroll;
             overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--pos-green, #198754) #f1f3f5;
+        }
+
+        /* Chromium/WebKit — Firefox uses the scrollbar-width/-color pair above */
+        .sidebar-wrapper::-webkit-scrollbar {
+            width: 8px;
+        }
+        .sidebar-wrapper::-webkit-scrollbar-track {
+            background: #f1f3f5;
+        }
+        .sidebar-wrapper::-webkit-scrollbar-thumb {
+            background-color: var(--pos-green, #198754);
+            border-radius: 8px;
+            border: 2px solid #f1f3f5;
+        }
+        .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+            background-color: #145c2d;
         }
 
         .sidebar-logo img            { transition: transform .2s ease; }
