@@ -12,10 +12,6 @@
           href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
           integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous" />
 
-    {{-- OverlayScrollbars --}}
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
-          integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg=" crossorigin="anonymous" />
 
     {{-- Bootstrap Icons --}}
     <link rel="stylesheet"
@@ -47,9 +43,13 @@
         /* AdminLTE's own `.sidebar-expand-lg.layout-fixed .app-sidebar` rule
            already makes the sidebar `position: sticky` (participating in the
            app-wrapper CSS grid, unlike `fixed` which breaks the grid and
-           overlays the content) with a height-constrained, scrollable
-           .sidebar-wrapper. We only need to guarantee overflow behaves even
-           if the OverlayScrollbars JS below doesn't manage to initialize. */
+           overlays the content) with a height-constrained .sidebar-wrapper.
+           We use a plain native scrollbar here (see below) rather than
+           OverlayScrollbars — that library takes over the element's
+           overflow/scrollbar rendering entirely, and its default "overlay"
+           style auto-hides until hover/scroll, which read as "no scrollbar
+           at all" in practice. Native + explicit ::-webkit-scrollbar /
+           scrollbar-color styling stays reliably visible. */
         .app-sidebar {
             border-right: 1px solid #e9ecef;
         }
@@ -259,7 +259,7 @@
          SIDEBAR
     ════════════════════════════════════ --}}
     <aside class="app-sidebar bg-white shadow" data-bs-theme="light">
-        <div class="sidebar-wrapper" data-overlayscrollbars-initialize>
+        <div class="sidebar-wrapper">
             <nav class="mt-2">
 
                 {{-- Logo --}}
@@ -459,11 +459,6 @@
 
 {{-- jQuery --}}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-{{-- OverlayScrollbars --}}
-<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
-        integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
-        crossorigin="anonymous"></script>
 
 {{-- Popper --}}
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
