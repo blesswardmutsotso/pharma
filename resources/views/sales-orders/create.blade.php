@@ -112,6 +112,14 @@
         </div>
         <button type="button" id="addItemBtn" class="btn btn-outline-success btn-sm mb-3"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
 
+        <div class="d-flex justify-content-end mb-3">
+            <div style="min-width:280px;font-size:.85rem;">
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Subtotal</span><span id="summarySubtotal">0.00</span></div>
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Discount</span><span id="summaryDiscount">0.00</span></div>
+                <div class="d-flex justify-content-between py-2 border-top fw-bold"><span>Grand Total</span><span id="summaryGrandTotal">0.00</span></div>
+            </div>
+        </div>
+
         <div class="form-section-title">Notes</div>
         <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
 
@@ -132,7 +140,10 @@
     function wireRemoveButtons() {
         tbody.querySelectorAll('.remove-row').forEach(btn => {
             btn.onclick = () => {
-                if (tbody.querySelectorAll('tr').length > 1) btn.closest('tr').remove();
+                if (tbody.querySelectorAll('tr').length > 1) {
+                    btn.closest('tr').remove();
+                    recalcSummary();
+                }
             };
         });
     }
@@ -143,6 +154,24 @@
         const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
         const total = Math.max((qty * price) - discount, 0);
         row.querySelector('.total-display').value = total.toFixed(2);
+        return { qty, price, discount, total };
+    }
+
+    function recalcSummary() {
+        let subtotal = 0;
+        let discountTotal = 0;
+        let grandTotal = 0;
+
+        tbody.querySelectorAll('tr').forEach(row => {
+            const { qty, price, discount, total } = recalcTotal(row);
+            subtotal += qty * price;
+            discountTotal += discount;
+            grandTotal += total;
+        });
+
+        document.getElementById('summarySubtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('summaryDiscount').textContent = discountTotal.toFixed(2);
+        document.getElementById('summaryGrandTotal').textContent = grandTotal.toFixed(2);
     }
 
     function fillRow(row, prefill) {
@@ -153,7 +182,7 @@
         row.querySelector('.batch-display').value = prefill.batch || '—';
         row.querySelector('.expiry-display').value = prefill.expiry || '—';
         row.querySelector('.available-qty-text').textContent = `Available: ${prefill.quantity}`;
-        recalcTotal(row);
+        recalcSummary();
     }
 
     function addRow(prefill) {
@@ -193,15 +222,17 @@
         tbody.appendChild(row);
         itemIndex++;
         wireRemoveButtons();
+        recalcSummary();
     }
 
     document.getElementById('addItemBtn').addEventListener('click', () => addRow(null));
 
     wireRemoveButtons();
+    recalcSummary();
 
     tbody.addEventListener('input', (e) => {
         if (e.target.classList.contains('qty-input') || e.target.classList.contains('unit-price-input') || e.target.classList.contains('discount-input')) {
-            recalcTotal(e.target.closest('tr'));
+            recalcSummary();
         }
     });
 
@@ -261,7 +292,7 @@
         row.querySelector('.batch-display').value = item.dataset.batch || '—';
         row.querySelector('.expiry-display').value = item.dataset.expiry || '—';
         row.querySelector('.available-qty-text').textContent = `Available: ${item.dataset.quantity}`;
-        recalcTotal(row);
+        recalcSummary();
 
         const resultsBox = item.closest('.product-search-results');
         resultsBox.style.display = 'none';

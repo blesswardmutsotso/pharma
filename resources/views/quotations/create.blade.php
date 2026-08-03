@@ -55,9 +55,10 @@
                     <tr>
                         <th style="width:14%">Product Code</th>
                         <th>Description</th>
-                        <th style="width:10%">Qty</th>
-                        <th style="width:13%">Unit Price</th>
-                        <th style="width:13%">Discount</th>
+                        <th style="width:9%">Qty</th>
+                        <th style="width:12%">Unit Price</th>
+                        <th style="width:12%">Discount</th>
+                        <th style="width:12%">Total</th>
                         <th style="width:40px"></th>
                     </tr>
                 </thead>
@@ -70,15 +71,24 @@
                             </div>
                         </td>
                         <td><input type="text" name="items[0][product_description]" class="form-control" required></td>
-                        <td><input type="number" name="items[0][qty]" class="form-control" min="1" required></td>
-                        <td><input type="number" step="0.01" name="items[0][unit_price]" class="form-control" min="0" required></td>
-                        <td><input type="number" step="0.01" name="items[0][discount]" class="form-control" min="0" value="0"></td>
+                        <td><input type="number" name="items[0][qty]" class="form-control qty-input" min="1" required></td>
+                        <td><input type="number" step="0.01" name="items[0][unit_price]" class="form-control unit-price-input" min="0" required></td>
+                        <td><input type="number" step="0.01" name="items[0][discount]" class="form-control discount-input" min="0" value="0"></td>
+                        <td><input type="text" class="form-control total-display" disabled value="0.00"></td>
                         <td><button type="button" class="btn-action remove-row" title="Remove"><i class="bi bi-trash"></i></button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
         <button type="button" id="addItemBtn" class="btn btn-outline-success btn-sm mb-3"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+
+        <div class="d-flex justify-content-end mb-3">
+            <div style="min-width:280px;font-size:.85rem;">
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Subtotal</span><span id="summarySubtotal">0.00</span></div>
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Discount</span><span id="summaryDiscount">0.00</span></div>
+                <div class="d-flex justify-content-between py-2 border-top fw-bold"><span>Grand Total</span><span id="summaryGrandTotal">0.00</span></div>
+            </div>
+        </div>
 
         <div class="form-section-title">Notes</div>
         <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
@@ -100,16 +110,46 @@
     function wireRemoveButtons() {
         tbody.querySelectorAll('.remove-row').forEach(btn => {
             btn.onclick = () => {
-                if (tbody.querySelectorAll('tr').length > 1) btn.closest('tr').remove();
+                if (tbody.querySelectorAll('tr').length > 1) {
+                    btn.closest('tr').remove();
+                    recalcSummary();
+                }
             };
         });
+    }
+
+    function recalcRowTotal(row) {
+        const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+        const price = parseFloat(row.querySelector('.unit-price-input').value) || 0;
+        const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
+        const total = Math.max((qty * price) - discount, 0);
+        row.querySelector('.total-display').value = total.toFixed(2);
+        return { qty, price, discount, total };
+    }
+
+    function recalcSummary() {
+        let subtotal = 0;
+        let discountTotal = 0;
+        let grandTotal = 0;
+
+        tbody.querySelectorAll('tr').forEach(row => {
+            const { qty, price, discount, total } = recalcRowTotal(row);
+            subtotal += qty * price;
+            discountTotal += discount;
+            grandTotal += total;
+        });
+
+        document.getElementById('summarySubtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('summaryDiscount').textContent = discountTotal.toFixed(2);
+        document.getElementById('summaryGrandTotal').textContent = grandTotal.toFixed(2);
     }
 
     function fillRow(row, prefill) {
         row.querySelector('.product-search-input').value = prefill.code;
         row.querySelector('[name$="[product_description]"]').value = prefill.desc;
-        row.querySelector('[name$="[qty]"]').value = 1;
-        row.querySelector('[name$="[unit_price]"]').value = prefill.price;
+        row.querySelector('.qty-input').value = 1;
+        row.querySelector('.unit-price-input').value = prefill.price;
+        recalcSummary();
     }
 
     function addRow(prefill) {
@@ -126,8 +166,14 @@
 
         const row = firstRow.cloneNode(true);
         row.querySelectorAll('input').forEach(input => {
-            input.value = input.name.includes('[discount]') ? '0' : '';
-            input.name = input.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
+            if (input.classList.contains('discount-input')) {
+                input.value = '0';
+            } else if (input.classList.contains('total-display')) {
+                input.value = '0.00';
+            } else {
+                input.value = '';
+            }
+            if (input.name) input.name = input.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
         });
         row.querySelector('.product-search-results').style.display = 'none';
         row.querySelector('.product-search-results').innerHTML = '';
@@ -139,14 +185,32 @@
         tbody.appendChild(row);
         itemIndex++;
         wireRemoveButtons();
+        recalcSummary();
     }
 
     document.getElementById('addItemBtn').addEventListener('click', () => addRow(null));
 
     wireRemoveButtons();
+    recalcSummary();
+
+    tbody.addEventListener('input', (e) => {
+        if (e.target.classList.contains('qty-input') || e.target.classList.contains('unit-price-input') || e.target.classList.contains('discount-input')) {
+            recalcSummary();
+        }
+    });
 
     // ── Product search-as-you-type (includes depleted/zero-stock items) ──
     let searchTimer = null;
+
+    function renderResultItem(p) {
+        return `
+            <div class="product-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
+                 data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
+                <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
+                <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
+            </div>
+        `;
+    }
 
     tbody.addEventListener('input', (e) => {
         if (!e.target.classList.contains('product-search-input')) return;
@@ -173,13 +237,7 @@
                         return;
                     }
 
-                    resultsBox.innerHTML = products.map(p => `
-                        <div class="product-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
-                             data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
-                            <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
-                            <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
-                        </div>
-                    `).join('');
+                    resultsBox.innerHTML = products.map(renderResultItem).join('');
                     resultsBox.style.display = 'block';
                 });
         }, 250);
@@ -192,7 +250,8 @@
         const row = item.closest('tr');
         row.querySelector('.product-search-input').value = item.dataset.code;
         row.querySelector('[name$="[product_description]"]').value = item.dataset.desc;
-        row.querySelector('[name$="[unit_price]"]').value = item.dataset.price;
+        row.querySelector('.unit-price-input').value = item.dataset.price;
+        recalcSummary();
 
         const resultsBox = item.closest('.product-search-results');
         resultsBox.style.display = 'none';
