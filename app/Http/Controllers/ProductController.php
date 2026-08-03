@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Stock;
 use App\Models\StockAuditLog;
+use App\Models\StockBatch;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -59,11 +60,30 @@ class ProductController extends Controller implements HasMiddleware
         $products = Stock::where('product_code', 'like', "%{$q}%")
             ->orWhere('product_description', 'like', "%{$q}%")
             ->orWhere('generic_name', 'like', "%{$q}%")
+            ->orderByRaw("CASE WHEN product_code LIKE ? OR product_description LIKE ? THEN 0 ELSE 1 END", ["{$q}%", "{$q}%"])
             ->orderBy('product_description')
-            ->limit(15)
+            ->limit(50)
             ->get(['product_code', 'product_description', 'selling_price', 'buying_price', 'quantity']);
 
-        return response()->json($products);
+        $nextBatches = StockBatch::whereIn('product_code', $products->pluck('product_code'))
+            ->orderedForFefo()
+            ->get()
+            ->groupBy('product_code')
+            ->map(fn ($batches) => $batches->first());
+
+        return response()->json($products->map(function (Stock $p) use ($nextBatches) {
+            $nextBatch = $nextBatches->get($p->product_code);
+
+            return [
+                'product_code' => $p->product_code,
+                'product_description' => $p->product_description,
+                'selling_price' => $p->selling_price,
+                'buying_price' => $p->buying_price,
+                'quantity' => $p->quantity,
+                'batch_number' => $nextBatch?->batch_number,
+                'expiry_date' => $nextBatch?->expiry_date?->format('Y-m-d'),
+            ];
+        }));
     }
 
     private function filteredProductsQuery(Request $request)

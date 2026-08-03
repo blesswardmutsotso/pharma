@@ -81,6 +81,7 @@
                         <th class="text-center">Qty Allocated</th>
                         <th class="text-center">Qty Dispatched</th>
                         <th class="text-end">Unit Price</th>
+                        <th class="text-end">Discount</th>
                         <th class="text-end">Line Total</th>
                     </tr>
                 </thead>
@@ -97,11 +98,12 @@
                             </td>
                             <td class="text-center">{{ $item->qty_dispatched }}</td>
                             <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
+                            <td class="text-end">{{ number_format($item->discount, 2) }}</td>
                             <td class="text-end">{{ number_format($item->line_total, 2) }}</td>
                         </tr>
                         @foreach ($item->batchAllocations as $allocation)
                             <tr class="text-muted" style="font-size:.78rem;">
-                                <td colspan="6">
+                                <td colspan="7">
                                     <i class="bi bi-arrow-return-right me-1"></i>Batch <span class="inv-no">{{ $allocation->stockBatch->batch_number }}</span>
                                     (exp {{ $allocation->stockBatch->expiry_date->format('Y-m-d') }}): {{ $allocation->qty_allocated }} units
                                 </td>

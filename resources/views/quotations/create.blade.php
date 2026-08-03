@@ -177,7 +177,7 @@
                         <div class="product-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
                              data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
                             <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
-                            <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}</div>
+                            <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
                         </div>
                     `).join('');
                     resultsBox.style.display = 'block';
@@ -234,7 +234,7 @@
                         <div class="quick-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
                              data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
                             <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
-                            <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}</div>
+                            <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
                         </div>
                     `).join('');
                     quickSearchResults.style.display = 'block';

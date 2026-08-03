@@ -104,6 +104,7 @@ class SalesOrderController extends Controller implements HasMiddleware
             'items.*.product_description' => ['required', 'string'],
             'items.*.qty_ordered' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -121,7 +122,8 @@ class SalesOrderController extends Controller implements HasMiddleware
             ]);
 
             foreach ($validated['items'] as $item) {
-                $lineTotal = round((float) $item['qty_ordered'] * (float) $item['unit_price'], 2);
+                $discount = (float) ($item['discount'] ?? 0);
+                $lineTotal = round(((float) $item['qty_ordered'] * (float) $item['unit_price']) - $discount, 2);
 
                 SalesOrderItem::create([
                     'sales_order_id' => $salesOrder->id,
@@ -129,6 +131,7 @@ class SalesOrderController extends Controller implements HasMiddleware
                     'product_description' => $item['product_description'],
                     'qty_ordered' => $item['qty_ordered'],
                     'unit_price' => $item['unit_price'],
+                    'discount' => $discount,
                     'line_total' => $lineTotal,
                 ]);
             }

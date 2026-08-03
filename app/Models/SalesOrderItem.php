@@ -17,6 +17,7 @@ class SalesOrderItem extends Model
         'qty_allocated',
         'qty_dispatched',
         'unit_price',
+        'discount',
         'line_total',
     ];
 
@@ -25,6 +26,7 @@ class SalesOrderItem extends Model
         'qty_allocated'  => 'integer',
         'qty_dispatched' => 'integer',
         'unit_price'     => 'decimal:2',
+        'discount'       => 'decimal:2',
         'line_total'     => 'decimal:2',
     ];
 

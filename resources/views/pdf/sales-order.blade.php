@@ -70,6 +70,7 @@
             <th>Product</th>
             <th class="text-end">Qty Ordered</th>
             <th class="text-end">Unit Price</th>
+            <th class="text-end">Discount</th>
             <th class="text-end">Line Total</th>
         </tr>
     </thead>
@@ -79,12 +80,13 @@
                 <td>{{ $item->product_code }} — {{ $item->product_description }}</td>
                 <td class="text-end">{{ $item->qty_ordered }}</td>
                 <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
+                <td class="text-end">{{ number_format($item->discount, 2) }}</td>
                 <td class="text-end">{{ number_format($item->line_total, 2) }}</td>
             </tr>
         @endforeach
     </tbody>
     <tfoot class="totals">
-        <tr><td colspan="3" class="text-end">Total ({{ $salesOrder->currency }})</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
+        <tr><td colspan="4" class="text-end">Total ({{ $salesOrder->currency }})</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
     </tfoot>
 </table>
 
