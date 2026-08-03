@@ -150,6 +150,7 @@ class ERPModuleTest extends TestCase
         $response = $this->post('/purchase-orders', [
             'po_number' => 'PO-2026-001',
             'supplier_id' => $supplier->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'expected_delivery_date' => now()->addDays(5)->toDateString(),
             'status' => 'draft',
@@ -420,6 +421,7 @@ class ERPModuleTest extends TestCase
 
         $payload = fn () => [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'AUTOSO-1',

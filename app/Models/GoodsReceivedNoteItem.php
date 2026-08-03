@@ -30,4 +30,9 @@ class GoodsReceivedNoteItem extends Model
     {
         return $this->belongsTo(GoodsReceivedNote::class);
     }
+
+    public function lineTotal(): float
+    {
+        return round((float) $this->qty_received * (float) $this->unit_cost, 2);
+    }
 }

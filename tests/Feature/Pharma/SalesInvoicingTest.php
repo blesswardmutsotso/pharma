@@ -45,6 +45,7 @@ class SalesInvoicingTest extends TestCase
 
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [
                 [

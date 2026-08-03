@@ -45,6 +45,8 @@
                             <th>Purchase Order</th>
                             <x-sortable-th field="received_date">Received Date</x-sortable-th>
                             <x-sortable-th field="status">Status</x-sortable-th>
+                            <th>Currency</th>
+                            <th class="text-end">Total</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -57,13 +59,15 @@
                                 <td>{{ $note->purchaseOrder?->po_number ?? '—' }}</td>
                                 <td>{{ $note->received_date?->format('Y-m-d') }}</td>
                                 <td><span class="badge-status badge-{{ $note->status }}">{{ ucfirst($note->status) }}</span></td>
+                                <td>{{ $note->currency() }}</td>
+                                <td class="text-end">{{ number_format($note->grandTotal(), 2) }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('goods-received-notes.show', $note) }}" title="View"><i class="bi bi-eye"></i></a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7">
+                                <td colspan="9">
                                     <div class="empty-state">
                                         <i class="bi bi-clipboard-check"></i>
                                         <p>No goods received notes found{{ request()->hasAny(['search', 'status']) ? ' matching your filters' : '' }}.<br>

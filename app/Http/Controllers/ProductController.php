@@ -61,7 +61,7 @@ class ProductController extends Controller implements HasMiddleware
             ->orWhere('generic_name', 'like', "%{$q}%")
             ->orderBy('product_description')
             ->limit(15)
-            ->get(['product_code', 'product_description', 'selling_price', 'quantity']);
+            ->get(['product_code', 'product_description', 'selling_price', 'buying_price', 'quantity']);
 
         return response()->json($products);
     }

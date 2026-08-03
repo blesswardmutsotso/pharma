@@ -99,6 +99,7 @@ class MultiLocationInventoryTest extends TestCase
         $this->post('/sales-orders', [
             'client_id' => $client->id,
             'branch_id' => $mutare->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'ML-2',

@@ -41,6 +41,7 @@ class RoleAccessControlTest extends TestCase
         $response = $this->post('/purchase-orders', [
             'po_number' => 'PO-RBAC-1',
             'supplier_id' => $supplier->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'status' => 'draft',
             'items' => [[
@@ -71,6 +72,7 @@ class RoleAccessControlTest extends TestCase
 
         $response = $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'RBAC-2',
@@ -209,6 +211,7 @@ class RoleAccessControlTest extends TestCase
         $this->post('/purchase-orders', [
             'po_number' => 'PO-MGR-1',
             'supplier_id' => $supplier->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'status' => 'draft',
             'items' => [[
@@ -224,6 +227,7 @@ class RoleAccessControlTest extends TestCase
         $client = Client::create(['name' => 'Manager Test Client']);
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'MGR-2',

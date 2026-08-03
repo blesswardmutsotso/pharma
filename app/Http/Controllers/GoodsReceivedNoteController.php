@@ -34,7 +34,7 @@ class GoodsReceivedNoteController extends Controller implements HasMiddleware
 
     private function filteredGrnsQuery(Request $request)
     {
-        $query = GoodsReceivedNote::with(['supplier', 'purchaseOrder']);
+        $query = GoodsReceivedNote::with(['supplier', 'purchaseOrder', 'items']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -62,7 +62,7 @@ class GoodsReceivedNoteController extends Controller implements HasMiddleware
     public function export(Request $request)
     {
         $query = $request->filled('ids')
-            ? GoodsReceivedNote::with(['supplier', 'purchaseOrder'])->whereIn('id', $request->input('ids'))
+            ? GoodsReceivedNote::with(['supplier', 'purchaseOrder', 'items'])->whereIn('id', $request->input('ids'))
             : $this->filteredGrnsQuery($request);
 
         $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'received_date', 'desc')
@@ -73,11 +73,13 @@ class GoodsReceivedNoteController extends Controller implements HasMiddleware
                 'po' => $g->purchaseOrder?->po_number,
                 'date' => $g->received_date?->format('Y-m-d'),
                 'status' => ucfirst($g->status),
+                'currency' => $g->currency(),
+                'total' => number_format($g->grandTotal(), 2),
             ]);
 
         return $this->streamCsvExport('goods-received-notes-' . now()->format('Ymd_His') . '.csv', [
             'number' => 'GRN Number', 'supplier' => 'Supplier', 'po' => 'Purchase Order',
-            'date' => 'Received Date', 'status' => 'Status',
+            'date' => 'Received Date', 'status' => 'Status', 'currency' => 'Currency', 'total' => 'Total',
         ], $rows);
     }
 
@@ -102,13 +104,15 @@ class GoodsReceivedNoteController extends Controller implements HasMiddleware
             'status' => ['required', 'in:received,partial,returned'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array'],
-            'items.*.product_code' => ['required', 'string', 'max:100'],
+            'items.*.product_code' => ['required', 'string', 'max:100', 'exists:stocks,product_code'],
             'items.*.product_description' => ['required', 'string', 'max:255'],
             'items.*.qty_received' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required', 'numeric', 'min:0'],
             'items.*.batch_number' => ['required', 'string', 'max:100'],
             'items.*.expiry_date' => ['required', 'date'],
             'items.*.status' => ['required', 'in:accepted,quarantine,rejected'],
+        ], [
+            'items.*.product_code.exists' => 'One or more products are not in the product catalogue yet — add them under Products before receiving stock for them.',
         ]);
 
         DB::transaction(function () use ($validated) {

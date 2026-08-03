@@ -33,7 +33,7 @@
                 <select name="purchase_order_id" class="form-select">
                     <option value="">None</option>
                     @foreach ($purchaseOrders as $purchaseOrder)
-                        <option value="{{ $purchaseOrder->id }}">{{ $purchaseOrder->po_number }}</option>
+                        <option value="{{ $purchaseOrder->id }}">{{ $purchaseOrder->po_number }} ({{ $purchaseOrder->currency }})</option>
                     @endforeach
                 </select>
             </div>
@@ -58,26 +58,33 @@
                 </select>
             </div>
         </div>
+        <div class="form-text mt-1">The GRN's currency follows whichever Purchase Order it's linked to (defaults to USD if none).</div>
 
         <div class="form-section-title">Line Items</div>
+        <div class="form-text mb-2">Products must be picked from the catalogue below — this is what keeps received stock showing up correctly on the Products list. If a product isn't listed yet, <a href="{{ route('products.create') }}" target="_blank" class="text-success">add it to the catalogue first</a>.</div>
         <div class="table-responsive">
             <table class="table" id="itemsTable">
                 <thead>
                     <tr>
-                        <th style="width:12%">Product Code</th>
-                        <th style="width:18%">Description</th>
-                        <th style="width:9%">Qty</th>
+                        <th style="width:16%">Product Code</th>
+                        <th style="width:16%">Description</th>
+                        <th style="width:8%">Qty</th>
                         <th style="width:10%">Unit Cost</th>
-                        <th style="width:13%">Batch Number</th>
-                        <th style="width:13%">Expiry Date</th>
-                        <th style="width:11%">Condition</th>
+                        <th style="width:12%">Batch Number</th>
+                        <th style="width:12%">Expiry Date</th>
+                        <th style="width:10%">Condition</th>
                         <th style="width:40px"></th>
                     </tr>
                 </thead>
                 <tbody id="itemsBody">
                     <tr>
-                        <td><input type="text" name="items[0][product_code]" class="form-control" required></td>
-                        <td><input type="text" name="items[0][product_description]" class="form-control" required></td>
+                        <td>
+                            <div class="product-search-wrap" style="position:relative;">
+                                <input type="text" name="items[0][product_code]" class="form-control product-search-input" autocomplete="off" placeholder="Search product…" required>
+                                <div class="product-search-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:#fff;border:1px solid #dee2e6;border-radius:6px;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+                            </div>
+                        </td>
+                        <td><input type="text" name="items[0][product_description]" class="form-control" readonly required></td>
                         <td><input type="number" name="items[0][qty_received]" class="form-control" min="1" required></td>
                         <td><input type="number" step="0.01" name="items[0][unit_cost]" class="form-control" min="0" required></td>
                         <td><input type="text" name="items[0][batch_number]" class="form-control" required></td>
@@ -128,12 +135,74 @@
             if (field.tagName === 'SELECT') field.selectedIndex = 0; else field.value = '';
             field.name = field.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
         });
+        row.querySelector('.product-search-results').style.display = 'none';
+        row.querySelector('.product-search-results').innerHTML = '';
         tbody.appendChild(row);
         itemIndex++;
         wireRemoveButtons();
     });
 
     wireRemoveButtons();
+
+    // ── Product search-as-you-type — forces every line to reference a real
+    // catalogue product, so received stock always lands on the Products list.
+    let searchTimer = null;
+
+    tbody.addEventListener('input', (e) => {
+        if (!e.target.classList.contains('product-search-input')) return;
+
+        const input = e.target;
+        const resultsBox = input.closest('.product-search-wrap').querySelector('.product-search-results');
+        const query = input.value.trim();
+
+        clearTimeout(searchTimer);
+
+        if (query.length < 2) {
+            resultsBox.style.display = 'none';
+            resultsBox.innerHTML = '';
+            return;
+        }
+
+        searchTimer = setTimeout(() => {
+            fetch(`{{ route('products.search') }}?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(products => {
+                    if (!products.length) {
+                        resultsBox.innerHTML = '<div class="p-2 text-muted" style="font-size:.82rem;">No matching products — add it to the catalogue first</div>';
+                        resultsBox.style.display = 'block';
+                        return;
+                    }
+
+                    resultsBox.innerHTML = products.map(p => `
+                        <div class="product-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
+                             data-code="${p.product_code}" data-desc="${p.product_description}" data-cost="${p.buying_price}">
+                            <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
+                            <div class="text-muted">Last buying price: ${Number(p.buying_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}</div>
+                        </div>
+                    `).join('');
+                    resultsBox.style.display = 'block';
+                });
+        }, 250);
+    });
+
+    tbody.addEventListener('click', (e) => {
+        const item = e.target.closest('.product-search-item');
+        if (!item) return;
+
+        const row = item.closest('tr');
+        row.querySelector('.product-search-input').value = item.dataset.code;
+        row.querySelector('[name$="[product_description]"]').value = item.dataset.desc;
+        row.querySelector('[name$="[unit_cost]"]').value = item.dataset.cost;
+
+        const resultsBox = item.closest('.product-search-results');
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.product-search-wrap')) return;
+        tbody.querySelectorAll('.product-search-results').forEach(box => box.style.display = 'none');
+    });
 })();
 </script>
 @endpush

@@ -43,4 +43,19 @@ class GoodsReceivedNote extends Model
     {
         return $this->hasMany(GoodsReceivedNoteItem::class);
     }
+
+    /**
+     * GRNs don't carry their own currency — they inherit it from the
+     * purchase order the goods were ordered under, defaulting to USD for
+     * GRNs with no linked PO.
+     */
+    public function currency(): string
+    {
+        return $this->purchaseOrder?->currency ?? PurchaseOrder::CURRENCY_USD;
+    }
+
+    public function grandTotal(): float
+    {
+        return round($this->items->sum(fn (GoodsReceivedNoteItem $item) => $item->lineTotal()), 2);
+    }
 }

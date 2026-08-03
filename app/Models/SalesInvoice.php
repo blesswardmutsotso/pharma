@@ -56,6 +56,20 @@ class SalesInvoice extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Invoices don't carry their own currency/client-PO reference — both
+     * are set once on the sales order and inherited here.
+     */
+    public function currency(): string
+    {
+        return $this->salesOrder?->currency ?? SalesOrder::CURRENCY_USD;
+    }
+
+    public function clientPoNumber(): ?string
+    {
+        return $this->salesOrder?->client_po_number;
+    }
+
     public function creditNotes()
     {
         return $this->hasMany(SalesCreditNote::class);

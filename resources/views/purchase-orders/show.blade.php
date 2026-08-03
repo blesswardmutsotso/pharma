@@ -16,6 +16,7 @@
     <div class="detail-card">
         <div class="detail-grid">
             <div><div class="label">Supplier</div><div class="value">{{ $purchaseOrder->supplier?->name }}</div></div>
+            <div><div class="label">Currency</div><div class="value">{{ $purchaseOrder->currency }}</div></div>
             <div><div class="label">Order Date</div><div class="value">{{ $purchaseOrder->order_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Expected Delivery</div><div class="value">{{ $purchaseOrder->expected_delivery_date?->format('Y-m-d') ?? '—' }}</div></div>
             <div><div class="label">Requested By</div><div class="value">{{ $purchaseOrder->requestedBy?->name ?? '—' }}</div></div>
@@ -81,6 +82,12 @@
                         </tr>
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5" class="text-end fw-bold">Total ({{ $purchaseOrder->currency }})</td>
+                        <td class="text-end fw-bold">{{ number_format($purchaseOrder->items->sum('line_total'), 2) }}</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>

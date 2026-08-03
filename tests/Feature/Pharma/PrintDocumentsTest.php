@@ -66,6 +66,7 @@ class PrintDocumentsTest extends TestCase
     {
         $this->actingAsAdmin();
         $supplier = Supplier::factory()->create(['status' => 'active']);
+        Stock::factory()->create(['product_code' => 'PDF-2']);
 
         $this->post('/goods-received-notes', [
             'grn_number' => 'GRN-PDF-1',
@@ -98,6 +99,7 @@ class PrintDocumentsTest extends TestCase
 
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'SO-PDF-ITEM',
@@ -135,6 +137,7 @@ class PrintDocumentsTest extends TestCase
 
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'PDF-3',

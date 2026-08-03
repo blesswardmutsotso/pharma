@@ -62,6 +62,8 @@
     <div class="meta-box" style="text-align:right;">
         <div><span class="label">Invoice Date:</span> {{ $invoice->invoice_date?->format('Y-m-d') }}</div>
         <div><span class="label">Due Date:</span> {{ $invoice->due_date?->format('Y-m-d') }}</div>
+        <div><span class="label">Currency:</span> {{ $invoice->currency() }}</div>
+        <div><span class="label">Client PO Number:</span> {{ $invoice->clientPoNumber() ?? '—' }}</div>
         <div><span class="label">Sales Order:</span> {{ $invoice->salesOrder?->so_number }}</div>
         <div><span class="label">Fulfilling Branch:</span> {{ $invoice->salesOrder?->branch?->name ?? '—' }}</div>
     </div>
@@ -95,7 +97,7 @@
     <tfoot class="totals">
         <tr><td colspan="6" class="text-end">Subtotal</td><td class="text-end">{{ number_format($invoice->subtotal, 2) }}</td></tr>
         <tr><td colspan="6" class="text-end">Tax</td><td class="text-end">{{ number_format($invoice->tax_total, 2) }}</td></tr>
-        <tr><td colspan="6" class="text-end">Total</td><td class="text-end">{{ number_format($invoice->total, 2) }}</td></tr>
+        <tr><td colspan="6" class="text-end">Total ({{ $invoice->currency() }})</td><td class="text-end">{{ number_format($invoice->total, 2) }}</td></tr>
         <tr><td colspan="6" class="text-end">Balance Due</td><td class="text-end">{{ number_format($invoice->balance(), 2) }}</td></tr>
     </tfoot>
 </table>

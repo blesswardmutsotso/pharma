@@ -86,6 +86,7 @@ class PurchaseOrderController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'po_number' => ['required', 'string', 'max:100', 'unique:purchase_orders,po_number'],
             'supplier_id' => ['required', 'exists:suppliers,id'],
+            'currency' => ['required', 'in:USD,ZWG'],
             'order_date' => ['required', 'date'],
             'expected_delivery_date' => ['nullable', 'date'],
             'status' => ['required', 'in:draft'],
@@ -101,6 +102,7 @@ class PurchaseOrderController extends Controller implements HasMiddleware
             $purchaseOrder = PurchaseOrder::create([
                 'po_number' => $validated['po_number'],
                 'supplier_id' => $validated['supplier_id'],
+                'currency' => $validated['currency'],
                 'order_date' => $validated['order_date'],
                 'expected_delivery_date' => $validated['expected_delivery_date'] ?? null,
                 'status' => $validated['status'],

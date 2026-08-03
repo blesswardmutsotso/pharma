@@ -33,6 +33,7 @@ class PurchaseOrderWorkflowTest extends TestCase
         $this->post('/purchase-orders', [
             'po_number' => 'PO-TEST-0001',
             'supplier_id' => $supplier->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'status' => 'draft',
             'items' => [

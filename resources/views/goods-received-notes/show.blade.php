@@ -19,6 +19,7 @@
     <div class="detail-card">
         <div class="detail-grid">
             <div><div class="label">Supplier</div><div class="value">{{ $goodsReceivedNote->supplier?->name }}</div></div>
+            <div><div class="label">Currency</div><div class="value">{{ $goodsReceivedNote->currency() }}</div></div>
             <div><div class="label">Received Date</div><div class="value">{{ $goodsReceivedNote->received_date?->format('Y-m-d') }}</div></div>
             <div>
                 <div class="label">Purchase Order</div>
@@ -47,6 +48,7 @@
                         <th>Expiry Date</th>
                         <th class="text-center">Qty Received</th>
                         <th class="text-end">Unit Cost</th>
+                        <th class="text-end">Total</th>
                         <th>Condition</th>
                     </tr>
                 </thead>
@@ -58,10 +60,18 @@
                             <td>{{ $item->expiry_date?->format('Y-m-d') }}</td>
                             <td class="text-center">{{ $item->qty_received }}</td>
                             <td class="text-end">{{ number_format($item->unit_cost, 2) }}</td>
+                            <td class="text-end">{{ number_format($item->lineTotal(), 2) }}</td>
                             <td><span class="badge-status badge-{{ $item->status }}">{{ ucfirst($item->status) }}</span></td>
                         </tr>
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5" class="text-end fw-bold">Total ({{ $goodsReceivedNote->currency() }})</td>
+                        <td class="text-end fw-bold">{{ number_format($goodsReceivedNote->grandTotal(), 2) }}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>

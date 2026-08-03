@@ -39,6 +39,7 @@ class SalesOrderFefoTest extends TestCase
     {
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [
                 [
@@ -213,6 +214,7 @@ class SalesOrderFefoTest extends TestCase
         // New order worth 30 would push total exposure to 110, over the 100 limit.
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'PRD-SO-CREDIT',

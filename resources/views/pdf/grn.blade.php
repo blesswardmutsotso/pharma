@@ -56,6 +56,7 @@
     <div class="meta-box" style="text-align:right;">
         <div><span class="label">Received Date:</span> {{ $grn->received_date?->format('Y-m-d') }}</div>
         <div><span class="label">Purchase Order:</span> {{ $grn->purchaseOrder?->po_number ?? '—' }}</div>
+        <div><span class="label">Currency:</span> {{ $grn->currency() }}</div>
         <div><span class="label">Status:</span> {{ ucfirst($grn->status) }}</div>
         <div><span class="label">Receiving Branch:</span> {{ $grn->branch?->name ?? '—' }}</div>
     </div>
@@ -69,6 +70,7 @@
             <th>Expiry</th>
             <th class="text-end">Qty Received</th>
             <th class="text-end">Unit Cost</th>
+            <th class="text-end">Total</th>
             <th>Condition</th>
         </tr>
     </thead>
@@ -80,10 +82,18 @@
                 <td>{{ $item->expiry_date?->format('Y-m-d') }}</td>
                 <td class="text-end">{{ $item->qty_received }}</td>
                 <td class="text-end">{{ number_format($item->unit_cost, 2) }}</td>
+                <td class="text-end">{{ number_format($item->lineTotal(), 2) }}</td>
                 <td>{{ ucfirst($item->status) }}</td>
             </tr>
         @endforeach
     </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="5" style="text-align:right;font-weight:bold;">Total ({{ $grn->currency() }})</td>
+            <td style="text-align:right;font-weight:bold;">{{ number_format($grn->grandTotal(), 2) }}</td>
+            <td></td>
+        </tr>
+    </tfoot>
 </table>
 
 <div class="signatures">

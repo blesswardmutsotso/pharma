@@ -110,6 +110,7 @@ class SmokeTest extends TestCase
         $poResponse = $this->post('/purchase-orders', [
             'po_number' => 'PO-SMOKE-1',
             'supplier_id' => $supplier->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'status' => 'draft',
             'items' => [[
@@ -165,6 +166,7 @@ class SmokeTest extends TestCase
 
         $this->post('/sales-orders', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'order_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'SMOKE-1',

@@ -57,6 +57,8 @@
     <div class="meta-box" style="text-align:right;">
         <div><span class="label">Order Date:</span> {{ $salesOrder->order_date?->format('Y-m-d') }}</div>
         <div><span class="label">Required Date:</span> {{ $salesOrder->required_date?->format('Y-m-d') ?? '—' }}</div>
+        <div><span class="label">Client PO Number:</span> {{ $salesOrder->client_po_number ?? '—' }}</div>
+        <div><span class="label">Currency:</span> {{ $salesOrder->currency }}</div>
         <div><span class="label">Status:</span> {{ ucfirst($salesOrder->status) }}</div>
         <div><span class="label">Branch:</span> {{ $salesOrder->branch?->name ?? '—' }}</div>
     </div>
@@ -82,7 +84,7 @@
         @endforeach
     </tbody>
     <tfoot class="totals">
-        <tr><td colspan="3" class="text-end">Total</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
+        <tr><td colspan="3" class="text-end">Total ({{ $salesOrder->currency }})</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
     </tfoot>
 </table>
 

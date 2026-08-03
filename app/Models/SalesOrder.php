@@ -17,9 +17,14 @@ class SalesOrder extends Model
     const STATUS_COMPLETED  = 'completed';
     const STATUS_CANCELLED  = 'cancelled';
 
+    const CURRENCY_USD = 'USD';
+    const CURRENCY_ZWG = 'ZWG';
+
     protected $fillable = [
         'so_number',
         'client_id',
+        'currency',
+        'client_po_number',
         'branch_id',
         'quotation_id',
         'order_date',

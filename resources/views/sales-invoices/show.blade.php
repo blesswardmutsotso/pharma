@@ -22,6 +22,8 @@
     <div class="detail-card">
         <div class="detail-grid">
             <div><div class="label">Client</div><div class="value">{{ $salesInvoice->client?->name }}</div></div>
+            <div><div class="label">Currency</div><div class="value">{{ $salesInvoice->currency() }}</div></div>
+            <div><div class="label">Client PO Number</div><div class="value">{{ $salesInvoice->clientPoNumber() ?? '—' }}</div></div>
             <div><div class="label">Invoice Date</div><div class="value">{{ $salesInvoice->invoice_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Due Date</div><div class="value">{{ $salesInvoice->due_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Balance Due</div><div class="value {{ $salesInvoice->balance() > 0 ? 'text-danger' : 'text-success' }}">${{ number_format($salesInvoice->balance(), 2) }}</div></div>
@@ -69,7 +71,7 @@
                         <td class="text-end">{{ number_format($salesInvoice->tax_total, 2) }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-bold">Total</td>
+                        <td colspan="6" class="text-end fw-bold">Total ({{ $salesInvoice->currency() }})</td>
                         <td class="text-end fw-bold">{{ number_format($salesInvoice->total, 2) }}</td>
                     </tr>
                 </tfoot>

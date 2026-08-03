@@ -15,9 +15,13 @@ class PurchaseOrder extends Model
     const STATUS_RECEIVED  = 'received';
     const STATUS_CLOSED    = 'closed';
 
+    const CURRENCY_USD = 'USD';
+    const CURRENCY_ZWG = 'ZWG';
+
     protected $fillable = [
         'po_number',
         'supplier_id',
+        'currency',
         'order_date',
         'expected_delivery_date',
         'status',

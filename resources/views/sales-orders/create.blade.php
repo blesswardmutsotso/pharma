@@ -28,6 +28,17 @@
                 </select>
             </div>
             <div class="col-md-2">
+                <label class="form-label">Currency</label>
+                <select name="currency" class="form-select" required>
+                    <option value="USD">USD</option>
+                    <option value="ZWG">ZWG (ZiG)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Client PO Number</label>
+                <input type="text" name="client_po_number" class="form-control" value="{{ old('client_po_number') }}" placeholder="Optional">
+            </div>
+            <div class="col-md-2">
                 <label class="form-label">Order Date</label>
                 <input type="date" name="order_date" class="form-control" value="{{ now()->toDateString() }}" required>
             </div>

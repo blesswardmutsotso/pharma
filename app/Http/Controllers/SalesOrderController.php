@@ -93,6 +93,8 @@ class SalesOrderController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
+            'currency' => ['required', 'in:USD,ZWG'],
+            'client_po_number' => ['nullable', 'string', 'max:100'],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'order_date' => ['required', 'date'],
             'required_date' => ['nullable', 'date'],
@@ -108,6 +110,8 @@ class SalesOrderController extends Controller implements HasMiddleware
             $salesOrder = SalesOrder::create([
                 'so_number' => SalesOrder::generateSoNumber(),
                 'client_id' => $validated['client_id'],
+                'currency' => $validated['currency'],
+                'client_po_number' => $validated['client_po_number'] ?? null,
                 'branch_id' => $validated['branch_id'] ?? null,
                 'order_date' => $validated['order_date'],
                 'required_date' => $validated['required_date'] ?? null,

@@ -19,6 +19,8 @@
     <div class="detail-card">
         <div class="detail-grid">
             <div><div class="label">Client</div><div class="value">{{ $salesOrder->client?->name }}</div></div>
+            <div><div class="label">Currency</div><div class="value">{{ $salesOrder->currency }}</div></div>
+            <div><div class="label">Client PO Number</div><div class="value">{{ $salesOrder->client_po_number ?? '—' }}</div></div>
             <div><div class="label">Order Date</div><div class="value">{{ $salesOrder->order_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Required Date</div><div class="value">{{ $salesOrder->required_date?->format('Y-m-d') ?? '—' }}</div></div>
             <div><div class="label">Dispatched At</div><div class="value">{{ $salesOrder->dispatched_at?->format('Y-m-d H:i') ?? '—' }}</div></div>
