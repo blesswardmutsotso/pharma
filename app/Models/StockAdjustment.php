@@ -91,4 +91,9 @@ class StockAdjustment extends Model
     {
         return static::types()[$this->type] ?? ucfirst($this->type);
     }
+
+    public function netValueImpact(): float
+    {
+        return round($this->items->sum(fn (StockAdjustmentItem $item) => $item->valueImpact()), 2);
+    }
 }

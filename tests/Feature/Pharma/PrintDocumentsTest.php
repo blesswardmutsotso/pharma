@@ -208,6 +208,46 @@ class PrintDocumentsTest extends TestCase
         $this->assertStringContainsString('ZWG', $html);
     }
 
+    public function test_sales_order_pdf_shows_batch_allocation_after_confirmation(): void
+    {
+        $this->actingAsAdmin();
+        $client = Client::create(['name' => 'SO Batch PDF Client']);
+
+        Stock::factory()->create(['product_code' => 'SO-BATCH-PDF', 'quantity' => 0]);
+        StockBatch::create([
+            'product_code' => 'SO-BATCH-PDF',
+            'batch_number' => 'SO-PDF-BATCH-1',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 10,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
+
+        $this->post('/sales-orders', [
+            'client_id' => $client->id,
+            'currency' => 'USD',
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'SO-BATCH-PDF',
+                'product_description' => 'Test Product',
+                'qty_ordered' => 5,
+                'unit_price' => 2,
+            ]],
+        ]);
+        $so = SalesOrder::latest('id')->firstOrFail();
+        $this->post("/sales-orders/{$so->id}/confirm");
+
+        $response = $this->get("/sales-orders/{$so->id}/pdf");
+        $response->assertOk();
+
+        $html = view('pdf.sales-order', [
+            'salesOrder' => $so->fresh(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch']),
+            'isDuplicate' => false,
+        ])->render();
+
+        $this->assertStringContainsString('SO-PDF-BATCH-1', $html);
+    }
+
     public function test_stock_adjustment_pdf_renders(): void
     {
         $this->actingAsAdmin();

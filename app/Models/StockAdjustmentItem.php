@@ -34,4 +34,9 @@ class StockAdjustmentItem extends Model
     {
         return $this->belongsTo(StockBatch::class);
     }
+
+    public function valueImpact(): float
+    {
+        return round((float) $this->qty_variance * (float) $this->unit_cost, 2);
+    }
 }

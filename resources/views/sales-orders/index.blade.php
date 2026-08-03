@@ -44,6 +44,7 @@
                             <th>Client</th>
                             <x-sortable-th field="order_date">Order Date</x-sortable-th>
                             <x-sortable-th field="status">Status</x-sortable-th>
+                            <th class="text-end">Total</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -55,13 +56,14 @@
                                 <td>{{ $salesOrder->client?->name }}</td>
                                 <td>{{ $salesOrder->order_date?->format('Y-m-d') }}</td>
                                 <td><span class="badge-status badge-{{ $salesOrder->status }}">{{ ucfirst($salesOrder->status) }}</span></td>
+                                <td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('sales-orders.show', $salesOrder) }}" title="View"><i class="bi bi-eye"></i></a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="7">
                                     <div class="empty-state">
                                         <i class="bi bi-cart-plus"></i>
                                         <p>No sales orders found{{ request()->hasAny(['search', 'status']) ? ' matching your filters' : '' }}.<br>

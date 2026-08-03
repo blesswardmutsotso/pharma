@@ -31,7 +31,7 @@ class StockAdjustmentController extends Controller implements HasMiddleware
 
     private function filteredAdjustmentsQuery(Request $request)
     {
-        $query = StockAdjustment::with(['branch', 'requestedBy']);
+        $query = StockAdjustment::with(['branch', 'requestedBy', 'items']);
 
         if ($search = $request->get('search')) {
             $query->where('adjustment_no', 'like', "%{$search}%");
@@ -58,7 +58,7 @@ class StockAdjustmentController extends Controller implements HasMiddleware
     public function export(Request $request)
     {
         $query = $request->filled('ids')
-            ? StockAdjustment::with(['branch', 'requestedBy'])->whereIn('id', $request->input('ids'))
+            ? StockAdjustment::with(['branch', 'requestedBy', 'items'])->whereIn('id', $request->input('ids'))
             : $this->filteredAdjustmentsQuery($request);
 
         $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'created_at', 'desc')
@@ -69,11 +69,12 @@ class StockAdjustmentController extends Controller implements HasMiddleware
                 'branch' => $a->branch?->name,
                 'requested_by' => $a->requestedBy?->name,
                 'status' => ucfirst($a->status),
+                'net_value_impact' => number_format($a->netValueImpact(), 2),
             ]);
 
         return $this->streamCsvExport('stock-adjustments-' . now()->format('Ymd_His') . '.csv', [
             'number' => 'Adjustment No.', 'type' => 'Type', 'branch' => 'Branch',
-            'requested_by' => 'Requested By', 'status' => 'Status',
+            'requested_by' => 'Requested By', 'status' => 'Status', 'net_value_impact' => 'Net Value Impact',
         ], $rows);
     }
 
@@ -151,14 +152,14 @@ class StockAdjustmentController extends Controller implements HasMiddleware
 
     public function show(StockAdjustment $stockAdjustment)
     {
-        $stockAdjustment->load(['items', 'branch', 'requestedBy', 'approvedBy']);
+        $stockAdjustment->load(['items.stockBatch', 'branch', 'requestedBy', 'approvedBy']);
 
         return view('stock-adjustments.show', ['adjustment' => $stockAdjustment]);
     }
 
     public function pdf(Request $request, StockAdjustment $stockAdjustment)
     {
-        $stockAdjustment->load(['items', 'branch', 'approvedBy']);
+        $stockAdjustment->load(['items.stockBatch', 'branch', 'approvedBy']);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.stock-adjustment', [
             'adjustment' => $stockAdjustment,

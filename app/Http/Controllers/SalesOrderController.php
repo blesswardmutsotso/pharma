@@ -35,7 +35,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     private function filteredSalesOrdersQuery(Request $request)
     {
-        $query = SalesOrder::with('client');
+        $query = SalesOrder::with('client', 'items');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -63,7 +63,7 @@ class SalesOrderController extends Controller implements HasMiddleware
     public function export(Request $request)
     {
         $query = $request->filled('ids')
-            ? SalesOrder::with('client')->whereIn('id', $request->input('ids'))
+            ? SalesOrder::with('client', 'items')->whereIn('id', $request->input('ids'))
             : $this->filteredSalesOrdersQuery($request);
 
         $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'order_date', 'desc')
@@ -73,10 +73,11 @@ class SalesOrderController extends Controller implements HasMiddleware
                 'client' => $so->client?->name,
                 'date' => $so->order_date?->format('Y-m-d'),
                 'status' => ucfirst($so->status),
+                'total' => number_format($so->items->sum('line_total'), 2),
             ]);
 
         return $this->streamCsvExport('sales-orders-' . now()->format('Ymd_His') . '.csv', [
-            'number' => 'SO Number', 'client' => 'Client', 'date' => 'Order Date', 'status' => 'Status',
+            'number' => 'SO Number', 'client' => 'Client', 'date' => 'Order Date', 'status' => 'Status', 'total' => 'Total',
         ], $rows);
     }
 
@@ -149,7 +150,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     public function pdf(Request $request, SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items']);
+        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch']);
 
         $isDuplicate = $salesOrder->print_count > 0;
         $salesOrder->increment('print_count');

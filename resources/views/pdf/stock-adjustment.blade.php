@@ -61,6 +61,7 @@
         <tr>
             <th>Product</th>
             <th>Batch</th>
+            <th>Expiry</th>
             <th class="text-end">System Qty</th>
             <th class="text-end">Counted Qty</th>
             <th class="text-end">Variance</th>
@@ -73,14 +74,21 @@
             <tr>
                 <td>{{ $item->product_code }} — {{ $item->product_description }}</td>
                 <td>{{ $item->batch_number ?? '—' }}</td>
+                <td>{{ $item->stockBatch?->expiry_date?->format('Y-m-d') ?? '—' }}</td>
                 <td class="text-end">{{ $item->qty_system }}</td>
                 <td class="text-end">{{ $item->qty_counted }}</td>
                 <td class="text-end">{{ $item->qty_variance > 0 ? '+' : '' }}{{ $item->qty_variance }}</td>
                 <td class="text-end">{{ number_format($item->unit_cost, 2) }}</td>
-                <td class="text-end">{{ number_format($item->qty_variance * $item->unit_cost, 2) }}</td>
+                <td class="text-end">{{ number_format($item->valueImpact(), 2) }}</td>
             </tr>
         @endforeach
     </tbody>
+    <tfoot class="totals">
+        <tr>
+            <td colspan="7" style="text-align:right;">Net Value Impact</td>
+            <td class="text-end">{{ number_format($adjustment->netValueImpact(), 2) }}</td>
+        </tr>
+    </tfoot>
 </table>
 
 <div class="signatures">

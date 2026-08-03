@@ -52,6 +52,7 @@
                             <th>Branch</th>
                             <th>Requested By</th>
                             <x-sortable-th field="status">Status</x-sortable-th>
+                            <th class="text-end">Net Value Impact</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -64,13 +65,14 @@
                                 <td>{{ $adjustment->branch?->name ?? '—' }}</td>
                                 <td>{{ $adjustment->requestedBy?->name }}</td>
                                 <td><span class="badge-status {{ $adjustment->statusBadgeClass() }}">{{ ucfirst($adjustment->status) }}</span></td>
+                                <td class="text-end">{{ number_format($adjustment->netValueImpact(), 2) }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('stock-adjustments.show', $adjustment) }}" title="View"><i class="bi bi-eye"></i></a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="empty-state">
                                         <i class="bi bi-clipboard-data"></i>
                                         <p>No stock adjustments found{{ request()->hasAny(['search', 'status', 'type']) ? ' matching your filters' : '' }}.<br>

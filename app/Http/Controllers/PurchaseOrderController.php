@@ -29,7 +29,7 @@ class PurchaseOrderController extends Controller implements HasMiddleware
 
     private function filteredPurchaseOrdersQuery(Request $request)
     {
-        $query = PurchaseOrder::with('supplier');
+        $query = PurchaseOrder::with('supplier', 'items');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -57,7 +57,7 @@ class PurchaseOrderController extends Controller implements HasMiddleware
     public function export(Request $request)
     {
         $query = $request->filled('ids')
-            ? PurchaseOrder::with('supplier')->whereIn('id', $request->input('ids'))
+            ? PurchaseOrder::with('supplier', 'items')->whereIn('id', $request->input('ids'))
             : $this->filteredPurchaseOrdersQuery($request);
 
         $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'order_date', 'desc')
@@ -67,10 +67,11 @@ class PurchaseOrderController extends Controller implements HasMiddleware
                 'supplier' => $po->supplier?->name,
                 'date' => $po->order_date?->format('Y-m-d'),
                 'status' => ucfirst($po->status),
+                'total' => number_format($po->items->sum('line_total'), 2),
             ]);
 
         return $this->streamCsvExport('purchase-orders-' . now()->format('Ymd_His') . '.csv', [
-            'number' => 'PO Number', 'supplier' => 'Supplier', 'date' => 'Order Date', 'status' => 'Status',
+            'number' => 'PO Number', 'supplier' => 'Supplier', 'date' => 'Order Date', 'status' => 'Status', 'total' => 'Total',
         ], $rows);
     }
 

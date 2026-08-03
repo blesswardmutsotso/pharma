@@ -54,6 +54,7 @@
                             <th>Supplier</th>
                             <x-sortable-th field="order_date">Order Date</x-sortable-th>
                             <x-sortable-th field="status">Status</x-sortable-th>
+                            <th class="text-end">Total</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -65,13 +66,14 @@
                                 <td>{{ $purchaseOrder->supplier?->name }}</td>
                                 <td>{{ $purchaseOrder->order_date?->format('Y-m-d') }}</td>
                                 <td><span class="badge-status badge-{{ $purchaseOrder->status }}">{{ ucfirst($purchaseOrder->status) }}</span></td>
+                                <td class="text-end">{{ number_format($purchaseOrder->items->sum('line_total'), 2) }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('purchase-orders.show', $purchaseOrder) }}" title="View"><i class="bi bi-eye"></i></a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="7">
                                     <div class="empty-state">
                                         <i class="bi bi-file-earmark-text"></i>
                                         <p>No purchase orders found{{ request()->hasAny(['search', 'status']) ? ' matching your filters' : '' }}.<br>

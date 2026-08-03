@@ -29,7 +29,7 @@ class QuotationController extends Controller implements HasMiddleware
 
     private function filteredQuotationsQuery(Request $request)
     {
-        $query = Quotation::with('client');
+        $query = Quotation::with('client', 'items');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -57,7 +57,7 @@ class QuotationController extends Controller implements HasMiddleware
     public function export(Request $request)
     {
         $query = $request->filled('ids')
-            ? Quotation::with('client')->whereIn('id', $request->input('ids'))
+            ? Quotation::with('client', 'items')->whereIn('id', $request->input('ids'))
             : $this->filteredQuotationsQuery($request);
 
         $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'quote_date', 'desc')
@@ -67,10 +67,11 @@ class QuotationController extends Controller implements HasMiddleware
                 'client' => $q->client?->name,
                 'date' => $q->quote_date?->format('Y-m-d'),
                 'status' => ucfirst($q->status),
+                'total' => number_format($q->items->sum('line_total'), 2),
             ]);
 
         return $this->streamCsvExport('quotations-' . now()->format('Ymd_His') . '.csv', [
-            'number' => 'Quote Number', 'client' => 'Client', 'date' => 'Quote Date', 'status' => 'Status',
+            'number' => 'Quote Number', 'client' => 'Client', 'date' => 'Quote Date', 'status' => 'Status', 'total' => 'Total',
         ], $rows);
     }
 

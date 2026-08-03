@@ -83,6 +83,12 @@
                 <td class="text-end">{{ number_format($item->discount, 2) }}</td>
                 <td class="text-end">{{ number_format($item->line_total, 2) }}</td>
             </tr>
+            @foreach ($item->batchAllocations as $allocation)
+                <tr style="font-size:9px;color:#6c757d;">
+                    <td colspan="4">Batch {{ $allocation->stockBatch->batch_number }} (exp {{ $allocation->stockBatch->expiry_date?->format('Y-m-d') }})</td>
+                    <td class="text-end">{{ $allocation->qty_allocated }} units</td>
+                </tr>
+            @endforeach
         @endforeach
     </tbody>
     <tfoot class="totals">
