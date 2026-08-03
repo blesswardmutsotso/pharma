@@ -143,7 +143,7 @@ class QuotationController extends Controller implements HasMiddleware
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.quotation', [
             'quotation' => $quotation,
             'isDuplicate' => $isDuplicate,
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('a4', 'landscape');
 
         $filename = "{$quotation->quote_number}.pdf";
 

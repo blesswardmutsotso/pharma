@@ -154,7 +154,7 @@ class SalesOrderController extends Controller implements HasMiddleware
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-order', [
             'salesOrder' => $salesOrder,
             'isDuplicate' => $isDuplicate,
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('a4', 'landscape');
 
         $filename = "{$salesOrder->so_number}.pdf";
 

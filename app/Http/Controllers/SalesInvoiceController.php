@@ -89,7 +89,7 @@ class SalesInvoiceController extends Controller
             'invoice' => $salesInvoice,
             'isDuplicate' => $isDuplicate,
             'qrImage' => $qrImage,
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('a4', 'landscape');
 
         $filename = "{$salesInvoice->invoice_number}.pdf";
 
