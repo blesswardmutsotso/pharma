@@ -42,6 +42,14 @@ class ExchangeRateTest extends TestCase
         ]);
     }
 
+    public function test_settings_page_renders_before_any_rate_is_configured(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->get('/admin/settings');
+        $response->assertOk();
+    }
+
     public function test_settings_page_renders_and_shows_saved_rate(): void
     {
         $this->actingAsAdmin();

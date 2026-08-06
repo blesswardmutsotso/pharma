@@ -37,11 +37,12 @@
                         <td colspan="2" class="text-muted">Base currency — not configurable</td>
                     </tr>
                     @foreach (\App\Models\ExchangeRate::CONVERTIBLE_CURRENCIES as $currency)
+                        @php($rate = $exchangeRates[$currency] ?? null)
                         <tr>
                             <td><span class="inv-no">{{ $currency }}</span></td>
-                            <td class="text-end">{{ isset($exchangeRates[$currency]) ? number_format($exchangeRates[$currency]->rate_to_usd, 6) : '—' }}</td>
-                            <td>{{ $exchangeRates[$currency]->updatedBy?->name ?? '—' }}</td>
-                            <td>{{ $exchangeRates[$currency]->updated_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                            <td class="text-end">{{ $rate ? number_format($rate->rate_to_usd, 6) : '—' }}</td>
+                            <td>{{ $rate?->updatedBy?->name ?? '—' }}</td>
+                            <td>{{ $rate?->updated_at?->format('Y-m-d H:i') ?? '—' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
