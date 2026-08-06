@@ -26,4 +26,19 @@
             @endif
         </div>
     </div>
+
+    <div style="margin-top:10px;display:flex;gap:16px;font-size:9.5px;color:#212529;">
+        <div style="flex:1;">
+            <div style="border-bottom:1px solid #212529;height:22px;"></div>
+            <div style="margin-top:2px;color:#6c757d;">Signature</div>
+        </div>
+        <div style="flex:1;">
+            <div style="border-bottom:1px solid #212529;height:22px;"></div>
+            <div style="margin-top:2px;color:#6c757d;">Name</div>
+        </div>
+        <div style="flex:1;">
+            <div style="border-bottom:1px solid #212529;height:22px;"></div>
+            <div style="margin-top:2px;color:#6c757d;">Date</div>
+        </div>
+    </div>
 @endif

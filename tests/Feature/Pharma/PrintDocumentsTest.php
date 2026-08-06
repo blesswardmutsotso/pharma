@@ -206,6 +206,9 @@ class PrintDocumentsTest extends TestCase
         $this->assertStringContainsString('4167859920000', $html);
         $this->assertStringContainsString('0167859920000', $html);
         $this->assertStringContainsString('ZWG', $html);
+        $this->assertStringContainsString('Signature', $html);
+        $this->assertStringContainsString('>Name<', $html);
+        $this->assertStringContainsString('>Date<', $html);
     }
 
     public function test_sales_order_pdf_shows_batch_allocation_after_confirmation(): void
