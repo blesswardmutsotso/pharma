@@ -44,6 +44,7 @@
                             <th>Client</th>
                             <x-sortable-th field="quote_date">Quote Date</x-sortable-th>
                             <x-sortable-th field="status">Status</x-sortable-th>
+                            <th>Currency</th>
                             <th class="text-end">Total</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -56,6 +57,7 @@
                                 <td>{{ $quotation->client?->name }}</td>
                                 <td>{{ $quotation->quote_date?->format('Y-m-d') }}</td>
                                 <td><span class="badge-status badge-{{ $quotation->status }}">{{ ucfirst($quotation->status) }}</span></td>
+                                <td>{{ $quotation->currency }}</td>
                                 <td class="text-end">{{ number_format($quotation->items->sum('line_total'), 2) }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('quotations.show', $quotation) }}" title="View"><i class="bi bi-eye"></i> View</a>
@@ -63,7 +65,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="empty-state">
                                         <i class="bi bi-file-earmark-ruled"></i>
                                         <p>No quotations found{{ request()->hasAny(['search', 'status']) ? ' matching your filters' : '' }}.<br>

@@ -34,6 +34,7 @@ class DocumentTotalsCompletenessTest extends TestCase
 
         $this->post('/quotations', [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'quote_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'TOT-1',

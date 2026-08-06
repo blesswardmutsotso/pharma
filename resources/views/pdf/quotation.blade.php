@@ -57,6 +57,7 @@
     <div class="meta-box" style="text-align:right;">
         <div><span class="label">Quote Date:</span> {{ $quotation->quote_date?->format('Y-m-d') }}</div>
         <div><span class="label">Valid Until:</span> {{ $quotation->valid_until?->format('Y-m-d') ?? '—' }}</div>
+        <div><span class="label">Currency:</span> {{ $quotation->currency }}</div>
     </div>
 </div>
 
@@ -82,7 +83,7 @@
         @endforeach
     </tbody>
     <tfoot class="totals">
-        <tr><td colspan="4" class="text-end">Total</td><td class="text-end">{{ number_format($quotation->items->sum('line_total'), 2) }}</td></tr>
+        <tr><td colspan="4" class="text-end">Total ({{ $quotation->currency }})</td><td class="text-end">{{ number_format($quotation->items->sum('line_total'), 2) }}</td></tr>
     </tfoot>
 </table>
 

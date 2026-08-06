@@ -15,9 +15,13 @@ class Quotation extends Model
     const STATUS_EXPIRED   = 'expired';
     const STATUS_CONVERTED = 'converted';
 
+    const CURRENCY_USD = 'USD';
+    const CURRENCY_ZWG = 'ZWG';
+
     protected $fillable = [
         'quote_number',
         'client_id',
+        'currency',
         'quote_date',
         'valid_until',
         'status',

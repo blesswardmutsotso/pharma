@@ -19,6 +19,7 @@
     <div class="detail-card">
         <div class="detail-grid">
             <div><div class="label">Client</div><div class="value">{{ $quotation->client?->name }}</div></div>
+            <div><div class="label">Currency</div><div class="value">{{ $quotation->currency }}</div></div>
             <div><div class="label">Quote Date</div><div class="value">{{ $quotation->quote_date?->format('Y-m-d') }}</div></div>
             <div><div class="label">Valid Until</div><div class="value">{{ $quotation->valid_until?->format('Y-m-d') ?? '—' }}</div></div>
             <div>

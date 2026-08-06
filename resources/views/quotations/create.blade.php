@@ -27,11 +27,18 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <label class="form-label">Currency</label>
+                <select name="currency" class="form-select" required>
+                    <option value="USD">USD</option>
+                    <option value="ZWG">ZWG (ZiG)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
                 <label class="form-label">Quote Date</label>
                 <input type="date" name="quote_date" class="form-control" value="{{ now()->toDateString() }}" required>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">Valid Until</label>
                 <input type="date" name="valid_until" class="form-control">
             </div>

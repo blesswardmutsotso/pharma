@@ -397,6 +397,7 @@ class ERPModuleTest extends TestCase
 
         $payload = fn () => [
             'client_id' => $client->id,
+            'currency' => 'USD',
             'quote_date' => now()->toDateString(),
             'items' => [[
                 'product_code' => 'AUTOQ-1',

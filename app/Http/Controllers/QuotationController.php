@@ -67,11 +67,12 @@ class QuotationController extends Controller implements HasMiddleware
                 'client' => $q->client?->name,
                 'date' => $q->quote_date?->format('Y-m-d'),
                 'status' => ucfirst($q->status),
+                'currency' => $q->currency,
                 'total' => number_format($q->items->sum('line_total'), 2),
             ]);
 
         return $this->streamCsvExport('quotations-' . now()->format('Ymd_His') . '.csv', [
-            'number' => 'Quote Number', 'client' => 'Client', 'date' => 'Quote Date', 'status' => 'Status', 'total' => 'Total',
+            'number' => 'Quote Number', 'client' => 'Client', 'date' => 'Quote Date', 'status' => 'Status', 'currency' => 'Currency', 'total' => 'Total',
         ], $rows);
     }
 
@@ -86,6 +87,7 @@ class QuotationController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
+            'currency' => ['required', 'in:USD,ZWG'],
             'quote_date' => ['required', 'date'],
             'valid_until' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -101,6 +103,7 @@ class QuotationController extends Controller implements HasMiddleware
             $quotation = Quotation::create([
                 'quote_number' => Quotation::generateQuoteNumber(),
                 'client_id' => $validated['client_id'],
+                'currency' => $validated['currency'],
                 'quote_date' => $validated['quote_date'],
                 'valid_until' => $validated['valid_until'] ?? null,
                 'status' => Quotation::STATUS_DRAFT,
@@ -161,6 +164,7 @@ class QuotationController extends Controller implements HasMiddleware
             $salesOrder = SalesOrder::create([
                 'so_number' => SalesOrder::generateSoNumber(),
                 'client_id' => $quotation->client_id,
+                'currency' => $quotation->currency,
                 'quotation_id' => $quotation->id,
                 'order_date' => now()->toDateString(),
                 'status' => SalesOrder::STATUS_DRAFT,
