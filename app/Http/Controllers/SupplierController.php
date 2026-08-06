@@ -92,6 +92,10 @@ class SupplierController extends Controller implements HasMiddleware
             'address' => ['nullable', 'string', 'max:500'],
             'payment_terms' => ['nullable', 'string', 'max:100'],
             'status' => ['required', 'in:active,inactive'],
+            'bank_name' => ['nullable', 'string', 'max:255'],
+            'bank_account_name' => ['nullable', 'string', 'max:255'],
+            'bank_account_number' => ['nullable', 'string', 'max:100'],
+            'zig_bank_account_number' => ['nullable', 'string', 'max:100'],
         ];
     }
 

@@ -38,6 +38,18 @@
         </div>
     </div>
 
+    @if ($client->bank_name || $client->bank_account_number || $client->zig_bank_account_number)
+        <div class="detail-card">
+            <div class="card-title">Banking Details</div>
+            <div class="detail-grid">
+                <div><div class="label">Bank Name</div><div class="value">{{ $client->bank_name ?? '—' }}</div></div>
+                <div><div class="label">Account Name</div><div class="value">{{ $client->bank_account_name ?? '—' }}</div></div>
+                <div><div class="label">USD Account Number</div><div class="value">{{ $client->bank_account_number ?? '—' }}</div></div>
+                <div><div class="label">ZWG Account Number</div><div class="value">{{ $client->zig_bank_account_number ?? '—' }}</div></div>
+            </div>
+        </div>
+    @endif
+
     <div class="table-card mb-4">
         <div class="p-3 border-bottom fw-semibold" style="font-size:.85rem;">
             <i class="bi bi-cart-plus me-1 text-success"></i>Recent Sales Orders

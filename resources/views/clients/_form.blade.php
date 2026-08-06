@@ -61,3 +61,23 @@
         <input type="text" name="street" class="form-control" value="{{ $val('street') }}">
     </div>
 </div>
+
+<div class="form-section-title">Banking Details</div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">Bank Name</label>
+        <input type="text" name="bank_name" class="form-control" value="{{ $val('bank_name') }}">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Account Name</label>
+        <input type="text" name="bank_account_name" class="form-control" value="{{ $val('bank_account_name') }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">USD Account Number</label>
+        <input type="text" name="bank_account_number" class="form-control" value="{{ $val('bank_account_number') }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">ZWG Account Number</label>
+        <input type="text" name="zig_bank_account_number" class="form-control" value="{{ $val('zig_bank_account_number') }}">
+    </div>
+</div>

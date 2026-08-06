@@ -14,64 +14,7 @@
 
     <form action="{{ route('suppliers.store') }}" method="POST" class="form-card">
         @csrf
-
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Name</label>
-                <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Contact Person</label>
-                <input type="text" name="contact_person" class="form-control" value="{{ old('contact_person') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Phone</label>
-                <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" value="{{ old('email') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">TIN</label>
-                <input type="text" name="tin" class="form-control" value="{{ old('tin') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">License Number</label>
-                <input type="text" name="license_number" class="form-control" value="{{ old('license_number') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">License Expiry Date</label>
-                <input type="date" name="license_expiry_date" class="form-control" value="{{ old('license_expiry_date') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Accreditation Body</label>
-                <input type="text" name="accreditation_body" class="form-control" value="{{ old('accreditation_body') }}" placeholder="e.g. MCAZ">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">MCAZ Licensed Person</label>
-                <input type="text" name="mcaz_licensed_person" class="form-control" value="{{ old('mcaz_licensed_person') }}" placeholder="Name of the MCAZ-licensed responsible person">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Wholesale License Number</label>
-                <input type="text" name="wholesale_license_number" class="form-control" value="{{ old('wholesale_license_number') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Address</label>
-                <input type="text" name="address" class="form-control" value="{{ old('address') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Payment Terms</label>
-                <input type="text" name="payment_terms" class="form-control" value="{{ old('payment_terms', 'Net 30') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-        </div>
+        @include('suppliers._form', ['supplier' => null])
 
         <div class="mt-4 d-flex gap-2">
             <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Save Supplier</button>

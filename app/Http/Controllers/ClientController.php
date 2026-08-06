@@ -113,6 +113,10 @@ class ClientController extends Controller implements HasMiddleware
             'district'       => 'nullable|string|max:100',
             'street'         => 'nullable|string|max:100',
             'house_no'       => 'nullable|string|max:20',
+            'bank_name'               => 'nullable|string|max:255',
+            'bank_account_name'       => 'nullable|string|max:255',
+            'bank_account_number'     => 'nullable|string|max:100',
+            'zig_bank_account_number' => 'nullable|string|max:100',
         ];
     }
 

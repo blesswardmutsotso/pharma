@@ -9,6 +9,7 @@ class Client extends Model
     protected $fillable = [
         'name', 'contact_person', 'vat_number', 'tin', 'phone', 'email', 'credit_limit',
         'province', 'city', 'district', 'street', 'house_no',
+        'bank_name', 'bank_account_name', 'bank_account_number', 'zig_bank_account_number',
     ];
 
     protected $casts = [
