@@ -70,6 +70,21 @@ class SalesInvoice extends Model
         return $this->salesOrder?->client_po_number;
     }
 
+    /**
+     * USD-equivalent of this invoice's total/balance, using the currently
+     * configured exchange rate. Needed anywhere invoices of different
+     * currencies are summed together (dashboards, reports).
+     */
+    public function totalInUsd(): float
+    {
+        return ExchangeRate::toUsd((float) $this->total, $this->currency());
+    }
+
+    public function balanceInUsd(): float
+    {
+        return ExchangeRate::toUsd($this->balance(), $this->currency());
+    }
+
     public function creditNotes()
     {
         return $this->hasMany(SalesCreditNote::class);

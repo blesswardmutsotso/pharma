@@ -51,7 +51,7 @@
                             <td><span class="inv-no">{{ $so->so_number }}</span></td>
                             <td>{{ $so->order_date?->format('Y-m-d') }}</td>
                             <td><span class="badge-status badge-{{ $so->status }}">{{ ucfirst($so->status) }}</span></td>
-                            <td class="text-center"><a class="btn-action" href="{{ route('sales-orders.show', $so) }}" title="View"><i class="bi bi-eye"></i></a></td>
+                            <td class="text-center"><a class="btn-action" href="{{ route('sales-orders.show', $so) }}" title="View"><i class="bi bi-eye"></i> View</a></td>
                         </tr>
                     @empty
                         <tr><td colspan="4" class="text-center text-muted py-3">No sales orders yet.</td></tr>
@@ -76,7 +76,7 @@
                             <td class="text-end">{{ number_format($invoice->total, 2) }}</td>
                             <td class="text-end">{{ number_format($invoice->balance(), 2) }}</td>
                             <td><span class="badge-status badge-{{ $invoice->status }}">{{ ucfirst(str_replace('_', ' ', $invoice->status)) }}</span></td>
-                            <td class="text-center"><a class="btn-action" href="{{ route('sales-invoices.show', $invoice) }}" title="View"><i class="bi bi-eye"></i></a></td>
+                            <td class="text-center"><a class="btn-action" href="{{ route('sales-invoices.show', $invoice) }}" title="View"><i class="bi bi-eye"></i> View</a></td>
                         </tr>
                     @empty
                         <tr><td colspan="6" class="text-center text-muted py-3">No invoices yet.</td></tr>

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExchangeRate;
 use App\Models\PurchaseOrder;
+use App\Models\SalesCreditNote;
 use App\Models\SalesInvoice;
 use App\Models\SalesOrder;
 use App\Models\Stock;
@@ -18,38 +20,43 @@ class AnalyticsController extends Controller
         $end      = $now->copy()->endOfMonth();
         $lastS    = $now->copy()->subMonth()->startOfMonth();
         $lastE    = $now->copy()->subMonth()->endOfMonth();
-        $isSqlite = DB::getDriverName() === 'sqlite';
 
         // ── Revenue last 30 days (invoiced totals) ──
-        $revenueDays = DB::table('sales_invoices')
-            ->selectRaw('DATE(invoice_date) as day, SUM(total) as total')
-            ->where('invoice_date', '>=', $now->copy()->subDays(29)->startOfDay())
-            ->where('status', '!=', SalesInvoice::STATUS_CANCELLED)
-            ->groupByRaw('DATE(invoice_date)')
-            ->orderBy('day')
-            ->get()->keyBy('day');
+        // Converted to USD-equivalent per invoice (see ExchangeRate) since invoices can
+        // be raised in USD or ZWG — a raw SQL SUM() would silently mix the two currencies.
+        $notCancelled = fn ($query) => $query->where('status', '!=', SalesInvoice::STATUS_CANCELLED);
+
+        $recentInvoices = $notCancelled(SalesInvoice::where('invoice_date', '>=', $now->copy()->subDays(29)->startOfDay()))
+            ->get(['id', 'sales_order_id', 'invoice_date', 'total']);
+        $recentInvoices->loadMissing('salesOrder');
+        $revenueByDay = $recentInvoices->groupBy(fn (SalesInvoice $i) => $i->invoice_date->toDateString())
+            ->map(fn ($group) => $group->sum(fn (SalesInvoice $i) => $i->totalInUsd()));
 
         $revenueLabels = [];
         $revenueData   = [];
         for ($i = 29; $i >= 0; $i--) {
             $d = $now->copy()->subDays($i)->toDateString();
             $revenueLabels[] = Carbon::parse($d)->format('d M');
-            $revenueData[]   = (float) ($revenueDays[$d]->total ?? 0);
+            $revenueData[]   = (float) ($revenueByDay[$d] ?? 0);
         }
 
         // ── Revenue this/last month (cancelled invoices never count as revenue) ──
-        $notCancelled = fn ($query) => $query->where('status', '!=', SalesInvoice::STATUS_CANCELLED);
+        $thisMonthInvoices = $notCancelled(SalesInvoice::whereBetween('invoice_date', [$start, $end]))->get();
+        $lastMonthInvoices = $notCancelled(SalesInvoice::whereBetween('invoice_date', [$lastS, $lastE]))->get();
 
-        $revenueThisMonth = (float) $notCancelled(SalesInvoice::whereBetween('invoice_date', [$start, $end]))->sum('total');
-        $revenueLastMonth = (float) $notCancelled(SalesInvoice::whereBetween('invoice_date', [$lastS, $lastE]))->sum('total');
+        $revenueThisMonth = (float) $thisMonthInvoices->sum(fn (SalesInvoice $i) => $i->totalInUsd());
+        $revenueLastMonth = (float) $lastMonthInvoices->sum(fn (SalesInvoice $i) => $i->totalInUsd());
         $revDiff = $revenueLastMonth > 0
             ? round((($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100, 1)
             : null;
 
         // ── Invoice counts ──
-        $invoiceCountThis = $notCancelled(SalesInvoice::whereBetween('invoice_date', [$start, $end]))->count();
+        $invoiceCountThis = $thisMonthInvoices->count();
         $invoiceCountAll  = $notCancelled(SalesInvoice::query())->count();
-        $avgInvoiceValue  = (float) $notCancelled(SalesInvoice::where('total', '>', 0))->avg('total');
+        $invoicesWithValue = $notCancelled(SalesInvoice::where('total', '>', 0))->get();
+        $avgInvoiceValue  = $invoicesWithValue->isNotEmpty()
+            ? (float) $invoicesWithValue->avg(fn (SalesInvoice $i) => $i->totalInUsd())
+            : 0.0;
 
         // ── Outstanding accounts receivable & ageing ──
         $openInvoices = SalesInvoice::whereIn('status', [
@@ -59,7 +66,7 @@ class AnalyticsController extends Controller
 
         $ageing = ['current' => 0.0, '30' => 0.0, '60' => 0.0, '90+' => 0.0];
         foreach ($openInvoices as $invoice) {
-            $ageing[$invoice->ageingBucket()] += $invoice->balance();
+            $ageing[$invoice->ageingBucket()] += $invoice->balanceInUsd();
         }
         $totalOutstanding = round(array_sum($ageing), 2);
 
@@ -70,26 +77,20 @@ class AnalyticsController extends Controller
         }
         $monthly6Labels = $months6->map(fn ($m) => Carbon::parse($m . '-01')->format('M Y'))->toArray();
 
-        $monthlyInvoiced = $isSqlite
-            ? DB::table('sales_invoices')->selectRaw("strftime('%Y-%m', invoice_date) as month, SUM(total) as total")
-                ->where('invoice_date', '>=', $now->copy()->subMonths(5)->startOfMonth())
-                ->where('status', '!=', SalesInvoice::STATUS_CANCELLED)
-                ->groupByRaw("strftime('%Y-%m', invoice_date)")->get()
-            : DB::table('sales_invoices')->selectRaw("DATE_FORMAT(invoice_date,'%Y-%m') as month, SUM(total) as total")
-                ->where('invoice_date', '>=', $now->copy()->subMonths(5)->startOfMonth())
-                ->where('status', '!=', SalesInvoice::STATUS_CANCELLED)
-                ->groupByRaw("DATE_FORMAT(invoice_date,'%Y-%m')")->get();
+        // Converted to USD-equivalent per record — a raw SQL SUM() would mix currencies.
+        $monthlyInvoiced = $notCancelled(SalesInvoice::where('invoice_date', '>=', $now->copy()->subMonths(5)->startOfMonth()))
+            ->get()
+            ->groupBy(fn (SalesInvoice $i) => $i->invoice_date->format('Y-m'))
+            ->map(fn ($group) => $group->sum(fn (SalesInvoice $i) => $i->totalInUsd()));
 
-        $monthlyCredited = $isSqlite
-            ? DB::table('sales_credit_notes')->selectRaw("strftime('%Y-%m', created_at) as month, SUM(amount) as total")
-                ->where('created_at', '>=', $now->copy()->subMonths(5)->startOfMonth())
-                ->groupByRaw("strftime('%Y-%m', created_at)")->get()
-            : DB::table('sales_credit_notes')->selectRaw("DATE_FORMAT(created_at,'%Y-%m') as month, SUM(amount) as total")
-                ->where('created_at', '>=', $now->copy()->subMonths(5)->startOfMonth())
-                ->groupByRaw("DATE_FORMAT(created_at,'%Y-%m')")->get();
+        $monthlyCredited = SalesCreditNote::with('salesInvoice')
+            ->where('created_at', '>=', $now->copy()->subMonths(5)->startOfMonth())
+            ->get()
+            ->groupBy(fn (SalesCreditNote $c) => $c->created_at->format('Y-m'))
+            ->map(fn ($group) => $group->sum(fn (SalesCreditNote $c) => $c->amountInUsd()));
 
-        $invoicedByMonth = $months6->map(fn ($m) => (float) ($monthlyInvoiced->firstWhere('month', $m)->total ?? 0))->toArray();
-        $creditedByMonth = $months6->map(fn ($m) => (float) ($monthlyCredited->firstWhere('month', $m)->total ?? 0))->toArray();
+        $invoicedByMonth = $months6->map(fn ($m) => (float) ($monthlyInvoiced[$m] ?? 0))->toArray();
+        $creditedByMonth = $months6->map(fn ($m) => (float) ($monthlyCredited[$m] ?? 0))->toArray();
 
         // ── Sales order pipeline ──
         $soPipeline = SalesOrder::selectRaw('status, COUNT(*) as cnt')->groupBy('status')->pluck('cnt', 'status');
@@ -102,24 +103,40 @@ class AnalyticsController extends Controller
         $poStatuses = PurchaseOrder::selectRaw('status, COUNT(*) as cnt')->groupBy('status')->pluck('cnt', 'status');
 
         // ── Top 10 products by qty invoiced ──
-        $topProducts = DB::table('sales_invoice_items as ii')
-            ->join('sales_invoices as i', 'i.id', '=', 'ii.sales_invoice_id')
-            ->where('i.status', '!=', SalesInvoice::STATUS_CANCELLED)
-            ->selectRaw('ii.product_code, ii.product_description, SUM(ii.qty) as qty_sold, SUM(ii.line_total) as revenue')
-            ->groupBy('ii.product_code', 'ii.product_description')
-            ->orderByDesc('revenue')
-            ->limit(10)
-            ->get();
+        // Revenue converted to USD-equivalent per invoice's currency before grouping.
+        $topProducts = $notCancelled(SalesInvoice::query())
+            ->with('items')
+            ->get()
+            ->flatMap(fn (SalesInvoice $invoice) => $invoice->items->map(fn ($item) => [
+                'product_code' => $item->product_code,
+                'product_description' => $item->product_description,
+                'qty' => $item->qty,
+                'revenue' => ExchangeRate::toUsd((float) $item->line_total, $invoice->currency()),
+            ]))
+            ->groupBy('product_code')
+            ->map(fn ($group) => (object) [
+                'product_code' => $group->first()['product_code'],
+                'product_description' => $group->first()['product_description'],
+                'qty_sold' => $group->sum('qty'),
+                'revenue' => $group->sum('revenue'),
+            ])
+            ->sortByDesc('revenue')
+            ->take(10)
+            ->values();
 
         // ── Top clients by revenue ──
-        $topClients = DB::table('sales_invoices as i')
-            ->join('clients as c', 'c.id', '=', 'i.client_id')
-            ->where('i.status', '!=', SalesInvoice::STATUS_CANCELLED)
-            ->selectRaw('c.name, COUNT(*) as cnt, SUM(i.total) as total')
-            ->groupBy('c.id', 'c.name')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get();
+        $topClients = $notCancelled(SalesInvoice::query())
+            ->with('client')
+            ->get()
+            ->groupBy('client_id')
+            ->map(fn ($group) => (object) [
+                'name' => $group->first()->client?->name,
+                'cnt' => $group->count(),
+                'total' => $group->sum(fn (SalesInvoice $i) => $i->totalInUsd()),
+            ])
+            ->sortByDesc('total')
+            ->take(10)
+            ->values();
 
         // ── Low stock / restock recommendation ──
         $lowStock = Stock::whereColumn('quantity', '<=', 'reorder_point')

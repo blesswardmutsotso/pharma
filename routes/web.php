@@ -180,6 +180,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     });
     Route::get('/admin/users',       [AdminController::class, 'manageUsers'])->name('admin.users');
     Route::get('/admin/settings',    [AdminController::class, 'settings'])->name('admin.settings');
+    Route::post('/admin/settings/exchange-rates', [AdminController::class, 'updateExchangeRate'])->name('admin.exchange-rates.update');
     Route::get('/user-management',   [AdminController::class, 'showUserManagement'])->name('user.management');
     Route::delete('/admin/users/{id}', [AdminController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');

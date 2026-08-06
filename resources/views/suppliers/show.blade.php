@@ -66,7 +66,7 @@
                             <td>{{ $po->order_date?->format('Y-m-d') }}</td>
                             <td><span class="badge-status badge-{{ $po->status }}">{{ ucfirst($po->status) }}</span></td>
                             <td class="text-center">
-                                <a class="btn-action" href="{{ route('purchase-orders.show', $po) }}" title="View"><i class="bi bi-eye"></i></a>
+                                <a class="btn-action" href="{{ route('purchase-orders.show', $po) }}" title="View"><i class="bi bi-eye"></i> View</a>
                             </td>
                         </tr>
                     @empty

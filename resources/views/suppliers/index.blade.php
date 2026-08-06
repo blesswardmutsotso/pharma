@@ -52,8 +52,8 @@
                                 <td>{{ $supplier->email ?? '—' }}</td>
                                 <td><span class="badge-status badge-{{ $supplier->status }}">{{ ucfirst($supplier->status) }}</span></td>
                                 <td class="text-center">
-                                    <a class="btn-action" href="{{ route('suppliers.show', $supplier) }}" title="View"><i class="bi bi-eye"></i></a>
-                                    <a class="btn-action" href="{{ route('suppliers.edit', $supplier) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <a class="btn-action" href="{{ route('suppliers.show', $supplier) }}" title="View"><i class="bi bi-eye"></i> View</a>
+                                    <a class="btn-action" href="{{ route('suppliers.edit', $supplier) }}" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
                                 </td>
                             </tr>
                         @empty

@@ -191,7 +191,7 @@
         .user-pill .avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--pos-green-light); color: var(--pos-green-dk); font-size: .65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; text-transform: uppercase; flex-shrink: 0; }
         .user-pill-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--pos-green-light); color: var(--pos-green-dk); font-size: .85rem; font-weight: 700; display: flex; align-items: center; justify-content: center; text-transform: uppercase; flex-shrink: 0; }
 
-        .btn-action { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #dee2e6; background: #fff; color: #495057; display: inline-flex; align-items: center; justify-content: center; font-size: .85rem; transition: background .12s, color .12s, border-color .12s; text-decoration: none; cursor: pointer; }
+        .btn-action { min-width: 30px; height: 30px; padding: 0 .65rem; border-radius: 7px; border: 1px solid #dee2e6; background: #fff; color: #495057; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; font-size: .78rem; font-weight: 600; white-space: nowrap; transition: background .12s, color .12s, border-color .12s; text-decoration: none; cursor: pointer; }
         .btn-action:hover { background: var(--pos-green-light); color: var(--pos-green-dk); border-color: var(--pos-green); }
 
         .empty-state { text-align: center; padding: 4rem 2rem; color: #adb5bd; }
@@ -398,6 +398,13 @@
                            class="nav-link {{ request()->routeIs('user-activity-logs.*') ? 'active-page' : '' }}">
                             <i class="nav-icon bi bi-clock-history text-success"></i>
                             <p>User Logs</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.settings') }}"
+                           class="nav-link {{ request()->routeIs('admin.settings') ? 'active-page' : '' }}">
+                            <i class="nav-icon bi bi-gear-fill text-success"></i>
+                            <p>System Settings</p>
                         </a>
                     </li>
                     @endif

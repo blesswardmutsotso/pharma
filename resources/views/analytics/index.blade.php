@@ -114,7 +114,7 @@
 
 <div class="kpi-grid">
     <div class="kpi">
-        <div class="label">Revenue this month</div>
+        <div class="label">Revenue this month (USD)</div>
         <div class="value green">${{ number_format($revenueThisMonth, 2) }}</div>
         <div class="trend">
             @if($revDiff !== null)
@@ -130,12 +130,12 @@
         <div class="trend">{{ number_format($invoiceCountAll) }} all time</div>
     </div>
     <div class="kpi">
-        <div class="label">Avg invoice value</div>
+        <div class="label">Avg invoice value (USD)</div>
         <div class="value">${{ number_format($avgInvoiceValue, 2) }}</div>
         <div class="trend">Across all invoices</div>
     </div>
     <div class="kpi {{ $totalOutstanding > 0 ? 'danger' : '' }}">
-        <div class="label">Outstanding receivables</div>
+        <div class="label">Outstanding receivables (USD)</div>
         <div class="value {{ $totalOutstanding > 0 ? 'red' : 'green' }}">${{ number_format($totalOutstanding, 2) }}</div>
         <div class="trend">Current: ${{ number_format($ageing['current'], 2) }} · 90+: ${{ number_format($ageing['90+'], 2) }}</div>
     </div>

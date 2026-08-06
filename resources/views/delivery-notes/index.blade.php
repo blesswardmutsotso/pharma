@@ -51,7 +51,7 @@
                                 <td>{{ $note->delivery_date?->format('Y-m-d') }}</td>
                                 <td>{{ $note->deliveredBy?->name ?? '—' }}</td>
                                 <td class="text-center">
-                                    <a class="btn-action" href="{{ route('delivery-notes.show', $note) }}" title="View"><i class="bi bi-eye"></i></a>
+                                    <a class="btn-action" href="{{ route('delivery-notes.show', $note) }}" title="View"><i class="bi bi-eye"></i> View</a>
                                 </td>
                             </tr>
                         @empty

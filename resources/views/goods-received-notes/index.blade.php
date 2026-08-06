@@ -62,7 +62,7 @@
                                 <td>{{ $note->currency() }}</td>
                                 <td class="text-end">{{ number_format($note->grandTotal(), 2) }}</td>
                                 <td class="text-center">
-                                    <a class="btn-action" href="{{ route('goods-received-notes.show', $note) }}" title="View"><i class="bi bi-eye"></i></a>
+                                    <a class="btn-action" href="{{ route('goods-received-notes.show', $note) }}" title="View"><i class="bi bi-eye"></i> View</a>
                                 </td>
                             </tr>
                         @empty

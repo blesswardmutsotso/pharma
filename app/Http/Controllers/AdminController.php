@@ -50,7 +50,24 @@ public function showUserManagement()
    
     public function settings()
     {
-        return view('admin.settings');
+        $exchangeRates = \App\Models\ExchangeRate::all()->keyBy('currency_code');
+
+        return view('admin.settings', compact('exchangeRates'));
+    }
+
+    public function updateExchangeRate(Request $request)
+    {
+        $validated = $request->validate([
+            'currency_code' => ['required', 'string', 'in:' . implode(',', \App\Models\ExchangeRate::CONVERTIBLE_CURRENCIES)],
+            'rate_to_usd' => ['required', 'numeric', 'min:0.000001'],
+        ]);
+
+        \App\Models\ExchangeRate::updateOrCreate(
+            ['currency_code' => $validated['currency_code']],
+            ['rate_to_usd' => $validated['rate_to_usd'], 'updated_by' => auth()->id()],
+        );
+
+        return back()->with('success', "Exchange rate for {$validated['currency_code']} updated: 1 USD = {$validated['rate_to_usd']} {$validated['currency_code']}.");
     }
 
     public function destroy($id)

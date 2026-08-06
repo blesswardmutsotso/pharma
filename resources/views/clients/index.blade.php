@@ -59,8 +59,8 @@
                                 <td>{{ $client->email ?? '—' }}</td>
                                 <td>{{ $client->vat_number ?? '—' }} / {{ $client->tin ?? '—' }}</td>
                                 <td class="text-center">
-                                    <a class="btn-action" href="{{ route('clients.show', $client) }}" title="View"><i class="bi bi-eye"></i></a>
-                                    <a class="btn-action" href="{{ route('clients.edit', $client) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <a class="btn-action" href="{{ route('clients.show', $client) }}" title="View"><i class="bi bi-eye"></i> View</a>
+                                    <a class="btn-action" href="{{ route('clients.edit', $client) }}" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
                                 </td>
                             </tr>
                         @empty

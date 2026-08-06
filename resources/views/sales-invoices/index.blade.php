@@ -61,7 +61,7 @@
                                 <td class="text-end fw-semibold {{ $invoice->balance() > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($invoice->balance(), 2) }}</td>
                                 <td><span class="badge-status badge-{{ $invoice->status }}">{{ ucfirst(str_replace('_', ' ', $invoice->status)) }}</span></td>
                                 <td class="text-center">
-                                    <a class="btn-action" href="{{ route('sales-invoices.show', $invoice) }}" title="View"><i class="bi bi-eye"></i></a>
+                                    <a class="btn-action" href="{{ route('sales-invoices.show', $invoice) }}" title="View"><i class="bi bi-eye"></i> View</a>
                                 </td>
                             </tr>
                         @empty

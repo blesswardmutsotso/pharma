@@ -30,10 +30,11 @@ class DashboardController extends Controller
             SalesOrder::STATUS_PICKING,
         ])->count();
 
+        // Summed in USD-equivalent since invoices can be in USD or ZWG (see ExchangeRate).
         $unpaidInvoicesTotal = (float) SalesInvoice::whereIn('status', [
             SalesInvoice::STATUS_UNPAID,
             SalesInvoice::STATUS_PARTIALLY_PAID,
-        ])->get()->sum(fn (SalesInvoice $invoice) => $invoice->balance());
+        ])->get()->sum(fn (SalesInvoice $invoice) => $invoice->balanceInUsd());
 
         $recentSalesOrders = SalesOrder::with('client')->latest()->limit(6)->get();
         $recentPurchaseOrders = PurchaseOrder::with('supplier')->latest()->limit(6)->get();

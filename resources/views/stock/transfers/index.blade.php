@@ -47,9 +47,6 @@
     .user-pill { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; color: #495057; }
     .user-pill .avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--pos-green-light); color: var(--pos-green-dk); font-size: .65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; text-transform: uppercase; flex-shrink: 0; }
 
-    .btn-action { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #dee2e6; background: #fff; color: #495057; display: inline-flex; align-items: center; justify-content: center; font-size: .85rem; transition: background .12s, color .12s, border-color .12s; text-decoration: none; cursor: pointer; }
-    .btn-action:hover { background: var(--pos-green-light); color: var(--pos-green-dk); border-color: var(--pos-green); }
-
     .empty-state { text-align: center; padding: 4rem 2rem; color: #adb5bd; }
     .empty-state i { font-size: 3rem; margin-bottom: 1rem; display: block; }
     .empty-state p { font-size: .9rem; margin: 0; }
@@ -206,7 +203,7 @@
                         </td>
                         <td class="text-center">
                             <a class="btn-action" href="{{ route('stock.transfers.show', $t) }}" title="View">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye"></i> View
                             </a>
                         </td>
                     </tr>

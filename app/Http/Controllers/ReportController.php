@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExchangeRate;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\SalesCreditNote;
 use App\Models\SalesInvoice;
 use App\Models\SalesInvoiceItem;
 use App\Models\SalesOrder;
@@ -172,20 +174,24 @@ class ReportController extends Controller implements HasMiddleware
         $from = $request->input('from') ? Carbon::parse($request->input('from')) : now()->startOfMonth();
         $to   = $request->input('to') ? Carbon::parse($request->input('to')) : now()->endOfMonth();
 
+        // Converted to USD-equivalent per invoice — invoices can be raised in USD or ZWG
+        // (see ExchangeRate), so a raw SQL SUM() would mix the two currencies.
         $rows = SalesInvoice::whereBetween('invoice_date', [$from, $to])
             ->where('status', '!=', SalesInvoice::STATUS_CANCELLED)
-            ->selectRaw('invoice_date, COUNT(*) as cnt, SUM(subtotal) as subtotal, SUM(tax_total) as tax_total, SUM(total) as total')
-            ->groupBy('invoice_date')->orderBy('invoice_date')->get()
-            ->map(fn ($r) => [
-                'date' => Carbon::parse($r->invoice_date)->format('Y-m-d'),
-                'invoices' => $r->cnt,
-                'subtotal' => number_format($r->subtotal, 2),
-                'tax' => number_format($r->tax_total, 2),
-                'total' => number_format($r->total, 2),
-            ]);
+            ->get()
+            ->groupBy(fn (SalesInvoice $i) => $i->invoice_date->toDateString())
+            ->map(fn ($group, $date) => [
+                'date' => $date,
+                'invoices' => $group->count(),
+                'subtotal' => number_format($group->sum(fn (SalesInvoice $i) => ExchangeRate::toUsd((float) $i->subtotal, $i->currency())), 2),
+                'tax' => number_format($group->sum(fn (SalesInvoice $i) => ExchangeRate::toUsd((float) $i->tax_total, $i->currency())), 2),
+                'total' => number_format($group->sum(fn (SalesInvoice $i) => $i->totalInUsd()), 2),
+            ])
+            ->sortBy('date')
+            ->values();
 
-        return $this->renderReport($request, 'sales-summary', 'Sales Summary Report (' . $from->format('Y-m-d') . ' to ' . $to->format('Y-m-d') . ')', [
-            'date' => 'Date', 'invoices' => 'Invoices', 'subtotal' => 'Subtotal', 'tax' => 'Tax', 'total' => 'Total',
+        return $this->renderReport($request, 'sales-summary', 'Sales Summary Report, USD-equivalent (' . $from->format('Y-m-d') . ' to ' . $to->format('Y-m-d') . ')', [
+            'date' => 'Date', 'invoices' => 'Invoices', 'subtotal' => 'Subtotal (USD)', 'tax' => 'Tax (USD)', 'total' => 'Total (USD)',
         ], $rows, ['from' => $from->toDateString(), 'to' => $to->toDateString()]);
     }
 
@@ -248,11 +254,12 @@ class ReportController extends Controller implements HasMiddleware
             SalesInvoice::STATUS_UNPAID, SalesInvoice::STATUS_PARTIALLY_PAID,
         ])->get();
 
+        // Balances converted to USD-equivalent per invoice's currency (see ExchangeRate).
         $byClient = $invoices->groupBy('client_id')->map(function ($group) {
             $client = $group->first()->client;
             $buckets = ['current' => 0.0, '30' => 0.0, '60' => 0.0, '90+' => 0.0];
             foreach ($group as $invoice) {
-                $buckets[$invoice->ageingBucket()] += $invoice->balance();
+                $buckets[$invoice->ageingBucket()] += $invoice->balanceInUsd();
             }
 
             return [
@@ -265,9 +272,9 @@ class ReportController extends Controller implements HasMiddleware
             ];
         })->values();
 
-        return $this->renderReport($request, 'debtors-ageing', 'Debtors Ageing Report', [
+        return $this->renderReport($request, 'debtors-ageing', 'Debtors Ageing Report (USD-equivalent)', [
             'client' => 'Client', 'current' => 'Current', 'd30' => '30 Days', 'd60' => '60 Days',
-            'd90' => '90+ Days', 'total' => 'Total Balance',
+            'd90' => '90+ Days', 'total' => 'Total Balance (USD)',
         ], $byClient);
     }
 
@@ -278,16 +285,19 @@ class ReportController extends Controller implements HasMiddleware
             $months->push(now()->copy()->subMonths($i)->format('Y-m'));
         }
 
-        $isSqlite = DB::getDriverName() === 'sqlite';
-        $invoiceExpr = $isSqlite ? "strftime('%Y-%m', invoice_date)" : "DATE_FORMAT(invoice_date, '%Y-%m')";
-        $creditExpr  = $isSqlite ? "strftime('%Y-%m', created_at)" : "DATE_FORMAT(created_at, '%Y-%m')";
-
+        // Converted to USD-equivalent per record (see ExchangeRate) — invoices/credit
+        // notes can be in USD or ZWG, so a raw SQL SUM() would mix the two currencies.
         $invoiced = SalesInvoice::where('status', '!=', SalesInvoice::STATUS_CANCELLED)
-            ->selectRaw("{$invoiceExpr} as month, SUM(total) as total")
-            ->groupByRaw($invoiceExpr)->pluck('total', 'month');
-        $credited = DB::table('sales_credit_notes')
-            ->selectRaw("{$creditExpr} as month, SUM(amount) as total")
-            ->groupByRaw($creditExpr)->pluck('total', 'month');
+            ->where('invoice_date', '>=', now()->subMonths(11)->startOfMonth())
+            ->get()
+            ->groupBy(fn (SalesInvoice $i) => $i->invoice_date->format('Y-m'))
+            ->map(fn ($group) => $group->sum(fn (SalesInvoice $i) => $i->totalInUsd()));
+
+        $credited = SalesCreditNote::with('salesInvoice')
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->get()
+            ->groupBy(fn (SalesCreditNote $c) => $c->created_at->format('Y-m'))
+            ->map(fn ($group) => $group->sum(fn (SalesCreditNote $c) => $c->amountInUsd()));
 
         $rows = $months->map(fn ($m) => [
             'month' => Carbon::parse($m . '-01')->format('M Y'),
@@ -296,8 +306,8 @@ class ReportController extends Controller implements HasMiddleware
             'net' => number_format(($invoiced[$m] ?? 0) - ($credited[$m] ?? 0), 2),
         ]);
 
-        return $this->renderReport($request, 'revenue-report', 'Revenue Report (last 12 months)', [
-            'month' => 'Month', 'invoiced' => 'Invoiced', 'credited' => 'Credited', 'net' => 'Net Revenue',
+        return $this->renderReport($request, 'revenue-report', 'Revenue Report, USD-equivalent (last 12 months)', [
+            'month' => 'Month', 'invoiced' => 'Invoiced (USD)', 'credited' => 'Credited (USD)', 'net' => 'Net Revenue (USD)',
         ], $rows);
     }
 

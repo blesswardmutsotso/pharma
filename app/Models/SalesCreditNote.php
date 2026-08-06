@@ -31,6 +31,11 @@ class SalesCreditNote extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function amountInUsd(): float
+    {
+        return ExchangeRate::toUsd((float) $this->amount, $this->salesInvoice?->currency() ?? 'USD');
+    }
+
     public static function generateCreditNoteNumber(): string
     {
         $prefix = 'CN-' . now()->format('Ymd') . '-';

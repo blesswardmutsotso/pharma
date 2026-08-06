@@ -111,8 +111,8 @@
                                 <td class="text-end">{{ $product->reorder_point }}</td>
                                 <td class="text-end">${{ number_format($product->selling_price, 2) }}</td>
                                 <td class="text-center">
-                                    <a class="btn-action" href="{{ route('products.show', $product) }}" title="View"><i class="bi bi-eye"></i></a>
-                                    <a class="btn-action" href="{{ route('products.edit', $product) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <a class="btn-action" href="{{ route('products.show', $product) }}" title="View"><i class="bi bi-eye"></i> View</a>
+                                    <a class="btn-action" href="{{ route('products.edit', $product) }}" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
                                 </td>
                             </tr>
                         @empty

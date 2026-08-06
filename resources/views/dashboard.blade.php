@@ -58,7 +58,7 @@
         </a>
         <a href="{{ route('sales-invoices.index') }}" class="stat-card text-decoration-none">
             <div class="icon {{ $unpaidInvoicesTotal > 0 ? 'red' : 'green' }}"><i class="bi bi-cash-stack"></i></div>
-            <div><div class="label">Outstanding Receivables</div><div class="value">${{ number_format($unpaidInvoicesTotal, 2) }}</div></div>
+            <div><div class="label">Outstanding Receivables (USD)</div><div class="value">${{ number_format($unpaidInvoicesTotal, 2) }}</div></div>
         </a>
     </div>
 
