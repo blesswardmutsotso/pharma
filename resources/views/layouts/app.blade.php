@@ -349,6 +349,13 @@
                             <p>Invoices</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('delivery-notes.index') }}"
+                           class="nav-link {{ request()->routeIs('delivery-notes.*') ? 'active-page' : '' }}">
+                            <i class="nav-icon bi bi-truck text-success"></i>
+                            <p>Delivery Notes</p>
+                        </a>
+                    </li>
 
                     {{-- ═══════ Inventory ═══════ --}}
                     <li class="nav-header text-uppercase small text-muted px-3 pt-2">Inventory</li>

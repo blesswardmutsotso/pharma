@@ -19,6 +19,7 @@
     .qr { text-align: center; margin-top: 15px; }
     .watermark { position: fixed; top: 40%; left: 15%; font-size: 90px; color: rgba(220,53,69,0.25); transform: rotate(-30deg); font-weight: bold; z-index: -1; }
     .signatures { margin-top: 40px; display: flex; justify-content: space-between; font-size: 10px; }
+    .company-logo { width: 150px; height: 62px; object-fit: contain; }
 </style>
 </head>
 <body>
@@ -30,9 +31,9 @@
 @endif
 
 <div class="header">
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:12px;">
         @if (file_exists(public_path('logo.png')))
-            <img src="{{ public_path('logo.png') }}" style="width:48px;height:48px;object-fit:contain;">
+            <img src="{{ public_path('logo.png') }}" class="company-logo">
         @endif
         <div>
             <div class="company">{{ config('company.name') }}</div>
@@ -42,6 +43,7 @@
                 @if (config('company.vendor_number')) &nbsp;·&nbsp; Vendor No: {{ config('company.vendor_number') }} @endif
                 <br>
                 @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
+                @if (config('company.phone_mobile')) &nbsp;·&nbsp; Mobile: {{ config('company.phone_mobile') }} @endif
                 @if (config('company.email_sales') ?: config('company.email')) &nbsp;·&nbsp; {{ config('company.email_sales') ?: config('company.email') }} @endif
             </div>
         </div>

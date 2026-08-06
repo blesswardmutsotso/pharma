@@ -79,6 +79,11 @@ class SalesOrder extends Model
         return $this->hasOne(SalesInvoice::class);
     }
 
+    public function deliveryNote()
+    {
+        return $this->hasOne(DeliveryNote::class);
+    }
+
     public static function generateSoNumber(): string
     {
         $prefix = 'SO-' . now()->format('Ymd') . '-';

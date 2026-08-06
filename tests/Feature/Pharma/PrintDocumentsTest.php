@@ -248,6 +248,102 @@ class PrintDocumentsTest extends TestCase
         $this->assertStringContainsString('SO-PDF-BATCH-1', $html);
     }
 
+    public function test_sales_order_pdf_title_reads_invoice(): void
+    {
+        $this->actingAsAdmin();
+        $client = Client::create(['name' => 'SO Title Client']);
+
+        $this->post('/sales-orders', [
+            'client_id' => $client->id,
+            'currency' => 'USD',
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'SO-TITLE-1',
+                'product_description' => 'Test Product',
+                'qty_ordered' => 1,
+                'unit_price' => 1,
+            ]],
+        ]);
+        $so = SalesOrder::latest('id')->firstOrFail();
+
+        $html = view('pdf.sales-order', [
+            'salesOrder' => $so->fresh(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch']),
+            'isDuplicate' => false,
+        ])->render();
+
+        $this->assertStringContainsString('>INVOICE<', $html);
+        $this->assertStringNotContainsString('>SALES ORDER<', $html);
+    }
+
+    public function test_mobile_number_and_banking_details_appear_on_sales_order_grn_and_stock_adjustment_pdfs(): void
+    {
+        config([
+            'company.phone_mobile' => '+263717538656',
+            'company.bank_name' => 'Crown Bank Limited',
+            'company.bank_account_number' => '4167859920000',
+        ]);
+
+        $this->actingAsAdmin();
+        $client = Client::create(['name' => 'Mobile Banking Client']);
+
+        $this->post('/sales-orders', [
+            'client_id' => $client->id,
+            'currency' => 'USD',
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'MOB-1',
+                'product_description' => 'Test Product',
+                'qty_ordered' => 1,
+                'unit_price' => 1,
+            ]],
+        ]);
+        $so = SalesOrder::latest('id')->firstOrFail();
+
+        $soHtml = view('pdf.sales-order', [
+            'salesOrder' => $so->fresh(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch']),
+            'isDuplicate' => false,
+        ])->render();
+        $this->assertStringContainsString('+263717538656', $soHtml);
+        $this->assertStringContainsString('Crown Bank Limited', $soHtml);
+
+        $supplier = Supplier::factory()->create(['status' => 'active']);
+        Stock::factory()->create(['product_code' => 'MOB-2']);
+        $this->post('/goods-received-notes', [
+            'grn_number' => 'GRN-MOB-1',
+            'supplier_id' => $supplier->id,
+            'received_date' => now()->toDateString(),
+            'status' => 'received',
+            'items' => [[
+                'product_code' => 'MOB-2',
+                'product_description' => 'Test Product',
+                'qty_received' => 1,
+                'unit_cost' => 1,
+                'batch_number' => 'MOB-BATCH-1',
+                'expiry_date' => now()->addYear()->toDateString(),
+                'status' => 'accepted',
+            ]],
+        ]);
+        $grn = \App\Models\GoodsReceivedNote::where('grn_number', 'GRN-MOB-1')->firstOrFail();
+        $grnHtml = view('pdf.grn', ['grn' => $grn->load('items', 'supplier', 'purchaseOrder', 'branch'), 'isDuplicate' => false])->render();
+        $this->assertStringContainsString('+263717538656', $grnHtml);
+        $this->assertStringContainsString('Crown Bank Limited', $grnHtml);
+
+        $product = Stock::factory()->create(['product_code' => 'MOB-3', 'quantity' => 10]);
+        $this->post('/stock-adjustments', [
+            'type' => \App\Models\StockAdjustment::TYPE_STOCK_TAKE,
+            'reason' => 'Mobile/banking PDF test',
+            'items' => [[
+                'product_code' => 'MOB-3',
+                'product_description' => $product->product_description,
+                'qty_counted' => 8,
+            ]],
+        ]);
+        $adjustment = \App\Models\StockAdjustment::where('reason', 'Mobile/banking PDF test')->firstOrFail();
+        $adjHtml = view('pdf.stock-adjustment', ['adjustment' => $adjustment->load('items', 'branch', 'approvedBy')])->render();
+        $this->assertStringContainsString('+263717538656', $adjHtml);
+        $this->assertStringContainsString('Crown Bank Limited', $adjHtml);
+    }
+
     public function test_stock_adjustment_pdf_renders(): void
     {
         $this->actingAsAdmin();

@@ -17,6 +17,8 @@
     .meta-box .label { color: #6c757d; font-size: 9px; text-transform: uppercase; }
     .watermark { position: fixed; top: 40%; left: 15%; font-size: 90px; color: rgba(220,53,69,0.25); transform: rotate(-30deg); font-weight: bold; z-index: -1; }
     .signatures { margin-top: 40px; display: flex; justify-content: space-between; font-size: 10px; }
+    .signatures .sig-block { width: 30%; }
+    .signatures .sig-line { border-bottom: 1px solid #212529; height: 30px; margin-bottom: 4px; }
     .company-logo { width: 150px; height: 62px; object-fit: contain; }
 </style>
 </head>
@@ -35,7 +37,6 @@
             <div class="company">{{ config('company.name') }}</div>
             <div style="font-size:9px;color:#6c757d;">
                 {{ config('company.address') }}
-                @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
                 <br>
                 @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
                 @if (config('company.phone_mobile')) &nbsp;·&nbsp; Mobile: {{ config('company.phone_mobile') }} @endif
@@ -44,23 +45,21 @@
         </div>
     </div>
     <div>
-        <div class="doc-title">GOODS RECEIVED NOTE</div>
-        <div class="doc-number">{{ $grn->grn_number }}</div>
+        <div class="doc-title">DELIVERY NOTE</div>
+        <div class="doc-number">{{ $deliveryNote->delivery_note_no }}</div>
     </div>
 </div>
 
 <div class="meta-grid">
     <div class="meta-box">
-        <div class="label">Supplier</div>
-        <div><strong>{{ $grn->supplier?->name }}</strong></div>
-        <div>{{ $grn->supplier?->address }}</div>
+        <div class="label">Deliver To</div>
+        <div><strong>{{ $deliveryNote->client?->name }}</strong></div>
+        <div>{{ $deliveryNote->client?->fullAddress() }}</div>
     </div>
     <div class="meta-box" style="text-align:right;">
-        <div><span class="label">Received Date:</span> {{ $grn->received_date?->format('Y-m-d') }}</div>
-        <div><span class="label">Purchase Order:</span> {{ $grn->purchaseOrder?->po_number ?? '—' }}</div>
-        <div><span class="label">Currency:</span> {{ $grn->currency() }}</div>
-        <div><span class="label">Status:</span> {{ ucfirst($grn->status) }}</div>
-        <div><span class="label">Receiving Branch:</span> {{ $grn->branch?->name ?? '—' }}</div>
+        <div><span class="label">Delivery Date:</span> {{ $deliveryNote->delivery_date?->format('Y-m-d') }}</div>
+        <div><span class="label">Sales Order:</span> {{ $deliveryNote->salesOrder?->so_number }}</div>
+        <div><span class="label">Delivering Branch:</span> {{ $deliveryNote->branch?->name ?? '—' }}</div>
     </div>
 </div>
 
@@ -68,42 +67,38 @@
     <thead>
         <tr>
             <th>Product</th>
-            <th>Batch</th>
+            <th>Batch Number</th>
             <th>Expiry</th>
-            <th class="text-end">Qty Received</th>
-            <th class="text-end">Unit Cost</th>
-            <th class="text-end">Total</th>
-            <th>Condition</th>
+            <th class="text-end">Qty</th>
         </tr>
     </thead>
     <tbody>
-        @foreach ($grn->items as $item)
+        @foreach ($deliveryNote->items as $item)
             <tr>
                 <td>{{ $item->product_code }} — {{ $item->product_description }}</td>
-                <td>{{ $item->batch_number }}</td>
-                <td>{{ $item->expiry_date?->format('Y-m-d') }}</td>
-                <td class="text-end">{{ $item->qty_received }}</td>
-                <td class="text-end">{{ number_format($item->unit_cost, 2) }}</td>
-                <td class="text-end">{{ number_format($item->lineTotal(), 2) }}</td>
-                <td>{{ ucfirst($item->status) }}</td>
+                <td>{{ $item->batch_number ?? '—' }}</td>
+                <td>{{ $item->expiry_date?->format('Y-m-d') ?? '—' }}</td>
+                <td class="text-end">{{ $item->qty }}</td>
             </tr>
         @endforeach
     </tbody>
-    <tfoot>
-        <tr>
-            <td colspan="5" style="text-align:right;font-weight:bold;">Total ({{ $grn->currency() }})</td>
-            <td style="text-align:right;font-weight:bold;">{{ number_format($grn->grandTotal(), 2) }}</td>
-            <td></td>
-        </tr>
-    </tfoot>
 </table>
 
 @include('pdf.partials.banking-details')
 
 <div class="signatures">
-    <div>Received By: ______________________</div>
-    <div>Checked By: ______________________</div>
-    <div>Supplier Rep: ______________________</div>
+    <div class="sig-block">
+        <div class="sig-line"></div>
+        Delivered By: {{ $deliveryNote->deliveredBy?->name ?? '______________________' }}
+    </div>
+    <div class="sig-block">
+        <div class="sig-line"></div>
+        Received By (Name &amp; Signature)
+    </div>
+    <div class="sig-block">
+        <div class="sig-line"></div>
+        Date
+    </div>
 </div>
 
 </body>

@@ -11,6 +11,7 @@ return [
 
     'phone_sales'  => env('COMPANY_PHONE_SALES', ''),
     'phone_office' => env('COMPANY_PHONE_OFFICE', ''),
+    'phone_mobile' => env('COMPANY_PHONE_MOBILE', ''),
     'email_sales'  => env('COMPANY_EMAIL_SALES', ''),
 
     'vendor_number' => env('COMPANY_VENDOR_NUMBER', ''),

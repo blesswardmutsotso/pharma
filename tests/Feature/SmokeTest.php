@@ -49,6 +49,7 @@ class SmokeTest extends TestCase
             '/sales-orders',
             '/sales-orders/create',
             '/sales-invoices',
+            '/delivery-notes',
             '/stock/transfers',
             '/account/settings',
             '/analytics',

@@ -18,6 +18,7 @@
     .meta-box .label { color: #6c757d; font-size: 9px; text-transform: uppercase; }
     .watermark { position: fixed; top: 40%; left: 15%; font-size: 90px; color: rgba(220,53,69,0.25); transform: rotate(-30deg); font-weight: bold; z-index: -1; }
     .signatures { margin-top: 40px; display: flex; justify-content: space-between; font-size: 10px; }
+    .company-logo { width: 150px; height: 62px; object-fit: contain; }
 </style>
 </head>
 <body>
@@ -27,9 +28,9 @@
 @endif
 
 <div class="header">
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:12px;">
         @if (file_exists(public_path('logo.png')))
-            <img src="{{ public_path('logo.png') }}" style="width:48px;height:48px;object-fit:contain;">
+            <img src="{{ public_path('logo.png') }}" class="company-logo">
         @endif
         <div>
             <div class="company">{{ config('company.name') }}</div>
@@ -38,12 +39,13 @@
                 @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
                 <br>
                 @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
+                @if (config('company.phone_mobile')) &nbsp;·&nbsp; Mobile: {{ config('company.phone_mobile') }} @endif
                 @if (config('company.email_sales') ?: config('company.email')) &nbsp;·&nbsp; {{ config('company.email_sales') ?: config('company.email') }} @endif
             </div>
         </div>
     </div>
     <div>
-        <div class="doc-title">SALES ORDER</div>
+        <div class="doc-title">INVOICE</div>
         <div class="doc-number">{{ $salesOrder->so_number }}</div>
     </div>
 </div>
@@ -95,6 +97,8 @@
         <tr><td colspan="4" class="text-end">Total ({{ $salesOrder->currency }})</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
     </tfoot>
 </table>
+
+@include('pdf.partials.banking-details')
 
 @if ($salesOrder->notes)
     <p style="margin-top:15px;font-size:10px;"><strong>Notes:</strong> {{ $salesOrder->notes }}</p>

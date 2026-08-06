@@ -11,7 +11,10 @@
             <div class="sub"><span class="badge-status badge-{{ $salesOrder->status }}">{{ ucfirst($salesOrder->status) }}</span></div>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('sales-orders.pdf', $salesOrder) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Print PDF</a>
+            <a href="{{ route('sales-orders.pdf', $salesOrder) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Print Invoice</a>
+            @if ($salesOrder->deliveryNote)
+                <a href="{{ route('delivery-notes.pdf', $salesOrder->deliveryNote) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-truck me-1"></i>Print Delivery Note</a>
+            @endif
             <a href="{{ route('sales-orders.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
         </div>
     </div>

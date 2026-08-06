@@ -22,6 +22,7 @@ use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\GoodsReceivedNoteController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\SalesOrderController;
+use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\SalesInvoiceController;
 use App\Http\Controllers\SalesCreditNoteController;
 use App\Http\Controllers\SalesPaymentController;
@@ -140,6 +141,10 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::post('/sales-orders/{salesOrder}/dispatch',      [SalesOrderController::class, 'dispatch'])->name('sales-orders.dispatch');
     Route::post('/sales-orders/{salesOrder}/cancel',        [SalesOrderController::class, 'cancel'])->name('sales-orders.cancel');
     Route::post('/sales-orders/{salesOrder}/return',        [SalesOrderController::class, 'returnItem'])->name('sales-orders.return');
+
+    Route::post('/delivery-notes/export', [DeliveryNoteController::class, 'export'])->name('delivery-notes.export');
+    Route::resource('delivery-notes', DeliveryNoteController::class)->only(['index', 'show']);
+    Route::get('/delivery-notes/{deliveryNote}/pdf', [DeliveryNoteController::class, 'pdf'])->name('delivery-notes.pdf');
 
     // ── Invoicing & payment tracking ──
     Route::post('/sales-invoices/export', [SalesInvoiceController::class, 'export'])->name('sales-invoices.export');

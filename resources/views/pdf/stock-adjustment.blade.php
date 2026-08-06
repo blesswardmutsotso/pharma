@@ -17,14 +17,15 @@
     .meta-box { font-size: 11px; }
     .meta-box .label { color: #6c757d; font-size: 9px; text-transform: uppercase; }
     .signatures { margin-top: 40px; display: flex; justify-content: space-between; font-size: 10px; }
+    .company-logo { width: 150px; height: 62px; object-fit: contain; }
 </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:12px;">
         @if (file_exists(public_path('logo.png')))
-            <img src="{{ public_path('logo.png') }}" style="width:48px;height:48px;object-fit:contain;">
+            <img src="{{ public_path('logo.png') }}" class="company-logo">
         @endif
         <div>
             <div class="company">{{ config('company.name') }}</div>
@@ -32,6 +33,7 @@
                 {{ config('company.address') }}
                 <br>
                 @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
+                @if (config('company.phone_mobile')) &nbsp;·&nbsp; Mobile: {{ config('company.phone_mobile') }} @endif
                 @if (config('company.email_sales') ?: config('company.email')) &nbsp;·&nbsp; {{ config('company.email_sales') ?: config('company.email') }} @endif
             </div>
         </div>
@@ -90,6 +92,8 @@
         </tr>
     </tfoot>
 </table>
+
+@include('pdf.partials.banking-details')
 
 <div class="signatures">
     <div>Counted By: ______________________</div>

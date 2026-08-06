@@ -11,6 +11,7 @@ use App\Models\SalesOrderItem;
 use App\Models\Stock;
 use App\Models\StockAuditLog;
 use App\Models\StockBatch;
+use App\Services\DeliveryNoteGenerationService;
 use App\Services\FefoAllocationService;
 use App\Services\SalesInvoiceGenerationService;
 use Illuminate\Http\Request;
@@ -143,7 +144,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     public function show(SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch']);
+        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch', 'deliveryNote']);
 
         return view('sales-orders.show', compact('salesOrder'));
     }
@@ -251,13 +252,13 @@ class SalesOrderController extends Controller implements HasMiddleware
         return view('sales-orders.picking-list', compact('salesOrder'));
     }
 
-    public function dispatch(SalesOrder $salesOrder, FefoAllocationService $fefo, SalesInvoiceGenerationService $invoicer)
+    public function dispatch(SalesOrder $salesOrder, FefoAllocationService $fefo, SalesInvoiceGenerationService $invoicer, DeliveryNoteGenerationService $deliveryNoter)
     {
         if (!$salesOrder->canBeDispatched()) {
             return back()->with('error', 'Only sales orders in picking can be dispatched.');
         }
 
-        DB::transaction(function () use ($salesOrder, $fefo, $invoicer) {
+        DB::transaction(function () use ($salesOrder, $fefo, $invoicer, $deliveryNoter) {
             foreach ($salesOrder->items as $item) {
                 $fefo->dispatchAllocations($item);
 
@@ -287,10 +288,11 @@ class SalesOrderController extends Controller implements HasMiddleware
 
             // BRD FR-INV-001: tax invoice generated automatically upon dispatch.
             $invoicer->generateFor($salesOrder->fresh(['items.batchAllocations.stockBatch']));
+            $deliveryNoter->generateFor($salesOrder->fresh(['items.batchAllocations.stockBatch']));
             $salesOrder->update(['status' => SalesOrder::STATUS_INVOICED]);
         });
 
-        return back()->with('success', 'Sales order dispatched and invoice generated.');
+        return back()->with('success', 'Sales order dispatched, invoice and delivery note generated.');
     }
 
     public function cancel(SalesOrder $salesOrder, FefoAllocationService $fefo)
