@@ -27,18 +27,9 @@
         </div>
     </div>
 
-    <div style="margin-top:10px;display:flex;gap:16px;font-size:9.5px;color:#212529;">
-        <div style="flex:1;">
-            <div style="border-bottom:1px solid #212529;height:22px;"></div>
-            <div style="margin-top:2px;color:#6c757d;">Signature</div>
-        </div>
-        <div style="flex:1;">
-            <div style="border-bottom:1px solid #212529;height:22px;"></div>
-            <div style="margin-top:2px;color:#6c757d;">Name</div>
-        </div>
-        <div style="flex:1;">
-            <div style="border-bottom:1px solid #212529;height:22px;"></div>
-            <div style="margin-top:2px;color:#6c757d;">Date</div>
-        </div>
+    <div style="margin-top:10px;font-size:9.5px;color:#212529;white-space:nowrap;">
+        Signature: <span style="display:inline-block;min-width:110px;border-bottom:1px solid #212529;">&nbsp;</span>
+        &nbsp;&nbsp;&nbsp; Name: <span style="display:inline-block;min-width:110px;border-bottom:1px solid #212529;">&nbsp;</span>
+        &nbsp;&nbsp;&nbsp; Date: <span style="display:inline-block;min-width:90px;border-bottom:1px solid #212529;">&nbsp;</span>
     </div>
 @endif

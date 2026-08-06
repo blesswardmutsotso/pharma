@@ -7,7 +7,6 @@ use App\Http\Controllers\Concerns\Sortable;
 use App\Models\SalesInvoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class SalesInvoiceController extends Controller
 {
@@ -80,15 +79,9 @@ class SalesInvoiceController extends Controller
         $isDuplicate = $salesInvoice->print_count > 0;
         $salesInvoice->increment('print_count');
 
-        $qrImage = QrCode::size(200)->generate(
-            "INVOICE:{$salesInvoice->invoice_number}|TOTAL:{$salesInvoice->total}|CLIENT:{$salesInvoice->client?->name}"
-        );
-        $qrImage = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
-
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $salesInvoice,
             'isDuplicate' => $isDuplicate,
-            'qrImage' => $qrImage,
         ])->setPaper('a4', 'landscape');
 
         $filename = "{$salesInvoice->invoice_number}.pdf";

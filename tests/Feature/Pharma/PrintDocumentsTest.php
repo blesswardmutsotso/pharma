@@ -120,7 +120,7 @@ class PrintDocumentsTest extends TestCase
         $this->assertSame(2, $so->fresh()->print_count);
     }
 
-    public function test_invoice_pdf_renders_with_qr_code(): void
+    public function test_invoice_pdf_renders_without_qr_code(): void
     {
         $this->actingAsAdmin();
         $client = Client::create(['name' => 'Invoice PDF Client']);
@@ -156,6 +156,9 @@ class PrintDocumentsTest extends TestCase
         $response = $this->get("/sales-invoices/{$invoice->id}/pdf");
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');
+
+        $html = view('pdf.invoice', ['invoice' => $invoice->fresh(['items']), 'isDuplicate' => false])->render();
+        $this->assertStringNotContainsString('class="qr"', $html);
     }
 
     public function test_invoice_pdf_includes_contact_details_and_zig_bank_account(): void
@@ -194,7 +197,6 @@ class PrintDocumentsTest extends TestCase
         $html = view('pdf.invoice', [
             'invoice' => $invoice,
             'isDuplicate' => false,
-            'qrImage' => 'data:image/svg+xml;base64,',
         ])->render();
 
         $this->assertStringContainsString('+263771234567', $html);
@@ -206,9 +208,9 @@ class PrintDocumentsTest extends TestCase
         $this->assertStringContainsString('4167859920000', $html);
         $this->assertStringContainsString('0167859920000', $html);
         $this->assertStringContainsString('ZWG', $html);
-        $this->assertStringContainsString('Signature', $html);
-        $this->assertStringContainsString('>Name<', $html);
-        $this->assertStringContainsString('>Date<', $html);
+        $this->assertStringContainsString('Signature:', $html);
+        $this->assertStringContainsString('Name:', $html);
+        $this->assertStringContainsString('Date:', $html);
     }
 
     public function test_sales_order_pdf_shows_batch_allocation_after_confirmation(): void
