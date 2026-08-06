@@ -248,6 +248,44 @@ class PrintDocumentsTest extends TestCase
         $this->assertStringContainsString('SO-PDF-BATCH-1', $html);
     }
 
+    public function test_invoice_pdf_uses_invoice_title_to_label_vat_and_no_branch_line(): void
+    {
+        $this->actingAsAdmin();
+        $client = Client::create(['name' => 'Label Test Client']);
+        $branch = \App\Models\Branch::create(['name' => 'Harare Branch', 'code' => 'HRE', 'is_active' => true]);
+        $so = SalesOrder::create([
+            'so_number' => 'SO-LABEL-PDF',
+            'client_id' => $client->id,
+            'branch_id' => $branch->id,
+            'order_date' => now()->toDateString(),
+            'status' => SalesOrder::STATUS_INVOICED,
+        ]);
+        $invoice = SalesInvoice::create([
+            'invoice_number' => 'INV-LABEL-PDF',
+            'sales_order_id' => $so->id,
+            'client_id' => $client->id,
+            'invoice_date' => now()->toDateString(),
+            'due_date' => now()->addDays(30)->toDateString(),
+            'status' => SalesInvoice::STATUS_UNPAID,
+            'subtotal' => 10, 'tax_total' => 0, 'total' => 10,
+        ]);
+
+        $html = view('pdf.invoice', [
+            'invoice' => $invoice,
+            'isDuplicate' => false,
+            'qrImage' => 'data:image/svg+xml;base64,',
+        ])->render();
+
+        $this->assertStringContainsString('>INVOICE<', $html);
+        $this->assertStringNotContainsString('TAX INVOICE', $html);
+        $this->assertStringContainsString('>To<', $html);
+        $this->assertStringNotContainsString('Bill To', $html);
+        $this->assertStringNotContainsString('Fulfilling Branch', $html);
+        $this->assertStringNotContainsString($branch->name, $html);
+        $this->assertStringContainsString('VAT', $html);
+        $this->assertStringContainsString('Invoice Total', $html);
+    }
+
     public function test_sales_order_pdf_title_reads_invoice(): void
     {
         $this->actingAsAdmin();

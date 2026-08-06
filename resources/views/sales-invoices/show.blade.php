@@ -44,7 +44,7 @@
                         <th>Expiry Date</th>
                         <th class="text-center">Qty</th>
                         <th class="text-end">Unit Price</th>
-                        <th class="text-end">Tax</th>
+                        <th class="text-end">VAT</th>
                         <th class="text-end">Line Total</th>
                     </tr>
                 </thead>
@@ -67,11 +67,11 @@
                         <td class="text-end">{{ number_format($salesInvoice->subtotal, 2) }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-semibold">Tax</td>
+                        <td colspan="6" class="text-end fw-semibold">VAT</td>
                         <td class="text-end">{{ number_format($salesInvoice->tax_total, 2) }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-bold">Total ({{ $salesInvoice->currency() }})</td>
+                        <td colspan="6" class="text-end fw-bold">Invoice Total ({{ $salesInvoice->currency() }})</td>
                         <td class="text-end fw-bold">{{ number_format($salesInvoice->total, 2) }}</td>
                     </tr>
                 </tfoot>

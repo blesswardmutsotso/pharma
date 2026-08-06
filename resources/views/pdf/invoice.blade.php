@@ -42,21 +42,20 @@
                 @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
                 @if (config('company.vendor_number')) &nbsp;·&nbsp; Vendor No: {{ config('company.vendor_number') }} @endif
                 <br>
-                @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
-                @if (config('company.phone_mobile')) &nbsp;·&nbsp; Mobile: {{ config('company.phone_mobile') }} @endif
+                @if (config('company.phone_mobile') ?: config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_mobile') ?: config('company.phone_sales') ?: config('company.phone') }} @endif
                 @if (config('company.email_sales') ?: config('company.email')) &nbsp;·&nbsp; {{ config('company.email_sales') ?: config('company.email') }} @endif
             </div>
         </div>
     </div>
     <div>
-        <div class="doc-title">TAX INVOICE</div>
+        <div class="doc-title">INVOICE</div>
         <div class="doc-number">{{ $invoice->invoice_number }}</div>
     </div>
 </div>
 
 <div class="meta-grid">
     <div class="meta-box">
-        <div class="label">Bill To</div>
+        <div class="label">To</div>
         <div><strong>{{ $invoice->client?->name }}</strong></div>
         <div>{{ $invoice->client?->fullAddress() }}</div>
         <div>VAT: {{ $invoice->client?->vat_number ?? '—' }} &nbsp; TIN: {{ $invoice->client?->tin ?? '—' }}</div>
@@ -67,7 +66,6 @@
         <div><span class="label">Currency:</span> {{ $invoice->currency() }}</div>
         <div><span class="label">Client PO Number:</span> {{ $invoice->clientPoNumber() ?? '—' }}</div>
         <div><span class="label">Sales Order:</span> {{ $invoice->salesOrder?->so_number }}</div>
-        <div><span class="label">Fulfilling Branch:</span> {{ $invoice->salesOrder?->branch?->name ?? '—' }}</div>
     </div>
 </div>
 
@@ -79,7 +77,7 @@
             <th>Expiry</th>
             <th class="text-end">Qty</th>
             <th class="text-end">Unit Price</th>
-            <th class="text-end">Tax</th>
+            <th class="text-end">VAT</th>
             <th class="text-end">Line Total</th>
         </tr>
     </thead>
@@ -98,8 +96,8 @@
     </tbody>
     <tfoot class="totals">
         <tr><td colspan="6" class="text-end">Subtotal</td><td class="text-end">{{ number_format($invoice->subtotal, 2) }}</td></tr>
-        <tr><td colspan="6" class="text-end">Tax</td><td class="text-end">{{ number_format($invoice->tax_total, 2) }}</td></tr>
-        <tr><td colspan="6" class="text-end">Total ({{ $invoice->currency() }})</td><td class="text-end">{{ number_format($invoice->total, 2) }}</td></tr>
+        <tr><td colspan="6" class="text-end">VAT</td><td class="text-end">{{ number_format($invoice->tax_total, 2) }}</td></tr>
+        <tr><td colspan="6" class="text-end">Invoice Total ({{ $invoice->currency() }})</td><td class="text-end">{{ number_format($invoice->total, 2) }}</td></tr>
         <tr><td colspan="6" class="text-end">Balance Due</td><td class="text-end">{{ number_format($invoice->balance(), 2) }}</td></tr>
     </tfoot>
 </table>

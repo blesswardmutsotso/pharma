@@ -38,8 +38,7 @@
                 {{ config('company.address') }}
                 @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
                 <br>
-                @if (config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_sales') ?: config('company.phone') }} @endif
-                @if (config('company.phone_mobile')) &nbsp;·&nbsp; Mobile: {{ config('company.phone_mobile') }} @endif
+                @if (config('company.phone_mobile') ?: config('company.phone_sales') ?: config('company.phone')) Tel: {{ config('company.phone_mobile') ?: config('company.phone_sales') ?: config('company.phone') }} @endif
                 @if (config('company.email_sales') ?: config('company.email')) &nbsp;·&nbsp; {{ config('company.email_sales') ?: config('company.email') }} @endif
             </div>
         </div>
@@ -62,7 +61,6 @@
         <div><span class="label">Client PO Number:</span> {{ $salesOrder->client_po_number ?? '—' }}</div>
         <div><span class="label">Currency:</span> {{ $salesOrder->currency }}</div>
         <div><span class="label">Status:</span> {{ ucfirst($salesOrder->status) }}</div>
-        <div><span class="label">Branch:</span> {{ $salesOrder->branch?->name ?? '—' }}</div>
     </div>
 </div>
 
