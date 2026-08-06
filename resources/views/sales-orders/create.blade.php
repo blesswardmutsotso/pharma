@@ -29,10 +29,15 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">Currency</label>
-                <select name="currency" class="form-select" required>
+                <select name="currency" id="currencySelect" class="form-select" required>
                     <option value="USD">USD</option>
                     <option value="ZWG">ZWG (ZiG)</option>
                 </select>
+                @if ($zwgRate)
+                    <div class="form-text">1 USD = {{ number_format($zwgRate, 4) }} ZWG</div>
+                @else
+                    <div class="form-text text-danger">No ZWG rate set — prices won't convert. <a href="{{ route('admin.settings') }}" target="_blank">Set it</a>.</div>
+                @endif
             </div>
             <div class="col-md-2">
                 <label class="form-label">Client PO Number</label>
@@ -77,7 +82,7 @@
                         <th style="width:11%">Next Batch</th>
                         <th style="width:10%">Expiry</th>
                         <th style="width:9%">Qty</th>
-                        <th style="width:11%">Unit Price (USD)</th>
+                        <th style="width:11%">Unit Price</th>
                         <th style="width:10%">Discount</th>
                         <th style="width:11%">Total</th>
                         <th style="width:40px"></th>
@@ -136,6 +141,17 @@
 (function () {
     let itemIndex = 1;
     const tbody = document.getElementById('itemsBody');
+    const currencySelect = document.getElementById('currencySelect');
+    const zwgRate = @json($zwgRate);
+
+    // Catalogue prices are stored in USD; convert to the order's chosen
+    // currency using the configured rate (falls back to USD if unset).
+    function convertFromUsd(usdPrice) {
+        if (currencySelect.value === 'ZWG' && zwgRate) {
+            return usdPrice * zwgRate;
+        }
+        return usdPrice;
+    }
 
     function wireRemoveButtons() {
         tbody.querySelectorAll('.remove-row').forEach(btn => {
@@ -178,7 +194,8 @@
         row.querySelector('.product-search-input').value = prefill.code;
         row.querySelector('[name$="[product_description]"]').value = prefill.desc;
         row.querySelector('.qty-input').value = 1;
-        row.querySelector('.unit-price-input').value = prefill.price;
+        row.dataset.usdPrice = prefill.price;
+        row.querySelector('.unit-price-input').value = convertFromUsd(parseFloat(prefill.price) || 0).toFixed(2);
         row.querySelector('.batch-display').value = prefill.batch || '—';
         row.querySelector('.expiry-display').value = prefill.expiry || '—';
         row.querySelector('.available-qty-text').textContent = `Available: ${prefill.quantity}`;
@@ -214,6 +231,7 @@
         row.querySelector('.available-qty-text').textContent = '';
         row.querySelector('.product-search-results').style.display = 'none';
         row.querySelector('.product-search-results').innerHTML = '';
+        delete row.dataset.usdPrice;
 
         if (prefill) {
             fillRow(row, prefill);
@@ -234,6 +252,17 @@
         if (e.target.classList.contains('qty-input') || e.target.classList.contains('unit-price-input') || e.target.classList.contains('discount-input')) {
             recalcSummary();
         }
+    });
+
+    // Re-price every row already picked whenever the currency changes, from
+    // the catalogue's original USD price — not from the currently displayed
+    // (possibly already-converted) value, to avoid compounding conversions.
+    currencySelect.addEventListener('change', () => {
+        tbody.querySelectorAll('tr').forEach(row => {
+            if (row.dataset.usdPrice === undefined) return;
+            row.querySelector('.unit-price-input').value = convertFromUsd(parseFloat(row.dataset.usdPrice) || 0).toFixed(2);
+        });
+        recalcSummary();
     });
 
     // ── Product search-as-you-type (includes depleted/zero-stock items) ──
@@ -288,7 +317,8 @@
         const row = item.closest('tr');
         row.querySelector('.product-search-input').value = item.dataset.code;
         row.querySelector('[name$="[product_description]"]').value = item.dataset.desc;
-        row.querySelector('.unit-price-input').value = item.dataset.price;
+        row.dataset.usdPrice = item.dataset.price;
+        row.querySelector('.unit-price-input').value = convertFromUsd(parseFloat(item.dataset.price) || 0).toFixed(2);
         row.querySelector('.batch-display').value = item.dataset.batch || '—';
         row.querySelector('.expiry-display').value = item.dataset.expiry || '—';
         row.querySelector('.available-qty-text').textContent = `Available: ${item.dataset.quantity}`;

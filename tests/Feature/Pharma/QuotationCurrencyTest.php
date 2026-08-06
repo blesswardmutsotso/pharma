@@ -3,6 +3,7 @@
 namespace Tests\Feature\Pharma;
 
 use App\Models\Client;
+use App\Models\ExchangeRate;
 use App\Models\Quotation;
 use App\Models\SalesOrder;
 use App\Models\User;
@@ -104,5 +105,39 @@ class QuotationCurrencyTest extends TestCase
 
         $salesOrder = SalesOrder::where('quotation_id', $quotation->id)->firstOrFail();
         $this->assertSame('ZWG', $salesOrder->currency);
+    }
+
+    public function test_quotation_create_page_shows_configured_zwg_rate(): void
+    {
+        $this->actingAsAdmin();
+        ExchangeRate::create(['currency_code' => 'ZWG', 'rate_to_usd' => 30.5]);
+
+        $response = $this->get('/quotations/create');
+
+        $response->assertOk();
+        $response->assertSee('30.5');
+        $response->assertDontSee('No ZWG rate set');
+    }
+
+    public function test_quotation_create_page_warns_when_no_zwg_rate_configured(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->get('/quotations/create');
+
+        $response->assertOk();
+        $response->assertSee('No ZWG rate set');
+    }
+
+    public function test_sales_order_create_page_shows_configured_zwg_rate(): void
+    {
+        $this->actingAsAdmin();
+        ExchangeRate::create(['currency_code' => 'ZWG', 'rate_to_usd' => 30.5]);
+
+        $response = $this->get('/sales-orders/create');
+
+        $response->assertOk();
+        $response->assertSee('30.5');
+        $response->assertDontSee('No ZWG rate set');
     }
 }

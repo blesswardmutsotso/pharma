@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Concerns\Sortable;
 use App\Models\Client;
+use App\Models\ExchangeRate;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
 use App\Models\SalesOrder;
@@ -79,8 +80,9 @@ class QuotationController extends Controller implements HasMiddleware
     public function create()
     {
         $clients = Client::orderBy('name')->limit(200)->get();
+        $zwgRate = ExchangeRate::rateFor('ZWG');
 
-        return view('quotations.create', compact('clients'));
+        return view('quotations.create', compact('clients', 'zwgRate'));
     }
 
     public function store(Request $request)

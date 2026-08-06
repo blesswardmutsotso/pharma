@@ -87,8 +87,9 @@ class SalesOrderController extends Controller implements HasMiddleware
         $clients = Client::orderBy('name')->limit(200)->get();
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $home = Branch::homeOrNull();
+        $zwgRate = \App\Models\ExchangeRate::rateFor('ZWG');
 
-        return view('sales-orders.create', compact('clients', 'branches', 'home'));
+        return view('sales-orders.create', compact('clients', 'branches', 'home', 'zwgRate'));
     }
 
     public function store(Request $request)
