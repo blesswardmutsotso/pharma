@@ -59,6 +59,7 @@
                                 <td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('sales-orders.show', $salesOrder) }}" title="View"><i class="bi bi-eye"></i> View</a>
+                                    <a class="btn-action" href="{{ route('sales-orders.pdf', $salesOrder) }}" target="_blank" title="Print"><i class="bi bi-printer"></i> Print</a>
                                 </td>
                             </tr>
                         @empty
