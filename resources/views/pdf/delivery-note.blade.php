@@ -5,7 +5,7 @@
 <style>
     body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #212529; }
     .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b80330; padding-bottom: 10px; margin-bottom: 15px; }
-    .company-box { display: flex; align-items: center; gap: 14px; border: 2px solid #000; border-radius: 6px; padding: 10px 16px; }
+    .company-box { display: flex; align-items: center; gap: 14px; border: 2px solid #b80330; border-radius: 6px; padding: 10px 16px; }
     .company { font-size: 18px; font-weight: bold; color: #b80330; }
     .doc-title { font-size: 20px; font-weight: bold; text-align: right; color: #212529; }
     .doc-number { font-size: 13px; text-align: right; color: #6c757d; }
