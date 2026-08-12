@@ -90,6 +90,12 @@
                     <td class="text-end">{{ $allocation->qty_allocated }} units</td>
                 </tr>
             @endforeach
+            @if ($item->isBackordered())
+                <tr style="font-size:9px;color:#b80330;">
+                    <td colspan="4">Backordered — awaiting stock, no batch allocated yet</td>
+                    <td class="text-end">{{ $item->backorderedQty() }} units</td>
+                </tr>
+            @endif
         @endforeach
     </tbody>
     <tfoot class="totals">
