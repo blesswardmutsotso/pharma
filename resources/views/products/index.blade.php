@@ -89,27 +89,46 @@
                             <th style="width:30px;"><input type="checkbox" class="select-all-checkbox form-check-input"></th>
                             <x-sortable-th field="product_code">Code</x-sortable-th>
                             <x-sortable-th field="product_description">Name</x-sortable-th>
+                            <x-sortable-th field="generic_name">Generic Name</x-sortable-th>
                             <x-sortable-th field="category">Category</x-sortable-th>
+                            <th>Dosage / Strength</th>
+                            <th>Pack / UoM</th>
+                            <x-sortable-th field="manufacturer">Manufacturer</x-sortable-th>
+                            <th>Controlled</th>
+                            <th>Next Batch</th>
+                            <th>Next Expiry</th>
                             <x-sortable-th field="quantity" align="end">Qty on Hand</x-sortable-th>
                             <x-sortable-th field="reorder_point" align="end">Reorder Point</x-sortable-th>
+                            <x-sortable-th field="buying_price" align="end">Buying Price</x-sortable-th>
                             <x-sortable-th field="selling_price" align="end">Selling Price</x-sortable-th>
+                            <th>Supplier</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($products as $product)
+                            @php $nextBatch = $product->batches->first(); @endphp
                             <tr>
                                 <td><input type="checkbox" name="ids[]" value="{{ $product->id }}" class="row-checkbox form-check-input"></td>
                                 <td><span class="inv-no">{{ $product->product_code }}</span></td>
                                 <td>{{ $product->product_description }}</td>
+                                <td>{{ $product->generic_name ?? '—' }}</td>
                                 <td>{{ $product->category ?? '—' }}</td>
+                                <td>{{ trim(($product->dosage_form ?? '') . ' ' . ($product->strength ?? '')) ?: '—' }}</td>
+                                <td>{{ trim(($product->pack_size ?? '') . ' / ' . ($product->unit_of_measure ?? ''), ' /') ?: '—' }}</td>
+                                <td>{{ $product->manufacturer ?? '—' }}</td>
+                                <td>{{ $product->controlled_substance_schedule ?? '—' }}</td>
+                                <td><span class="inv-no">{{ $nextBatch?->batch_number ?? '—' }}</span></td>
+                                <td>{{ $nextBatch?->expiry_date?->format('Y-m-d') ?? '—' }}</td>
                                 <td class="text-end">
                                     <span class="badge-status {{ $product->quantity == 0 ? 'badge-rejected' : ($product->isLowStock() ? 'badge-pending' : 'badge-approved') }}">
                                         {{ $product->quantity }}
                                     </span>
                                 </td>
                                 <td class="text-end">{{ $product->reorder_point }}</td>
+                                <td class="text-end">${{ number_format($product->buying_price, 2) }}</td>
                                 <td class="text-end">${{ number_format($product->selling_price, 2) }}</td>
+                                <td>{{ $product->defaultSupplier?->name ?? '—' }}</td>
                                 <td class="text-center">
                                     <a class="btn-action" href="{{ route('products.show', $product) }}" title="View"><i class="bi bi-eye"></i> View</a>
                                     <a class="btn-action" href="{{ route('products.edit', $product) }}" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
@@ -117,7 +136,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8">
+                                <td colspan="17">
                                     <div class="empty-state">
                                         <i class="bi bi-capsule"></i>
                                         <p>No products found{{ request()->hasAny(['search','category','low_stock']) ? ' matching your filters' : '' }}.<br>

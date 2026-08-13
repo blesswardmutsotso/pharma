@@ -17,7 +17,10 @@ class ProductController extends Controller implements HasMiddleware
 {
     use ExportsCsv, Sortable;
 
-    private const SORTABLE_COLUMNS = ['product_code', 'product_description', 'category', 'quantity', 'reorder_point', 'selling_price'];
+    private const SORTABLE_COLUMNS = [
+        'product_code', 'product_description', 'category', 'generic_name', 'manufacturer',
+        'quantity', 'reorder_point', 'buying_price', 'selling_price',
+    ];
 
     public static function middleware(): array
     {
@@ -115,6 +118,8 @@ class ProductController extends Controller implements HasMiddleware
         $products = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'product_description')
             ->paginate(20)->withQueryString();
 
+        $products->load(['defaultSupplier', 'batches' => fn ($q) => $q->active()->where('qty_on_hand', '>', 0)->orderBy('expiry_date')]);
+
         $categories = Stock::whereNotNull('category')->distinct()->orderBy('category')->pluck('category');
 
         $stats = [
@@ -135,18 +140,45 @@ class ProductController extends Controller implements HasMiddleware
 
         $rows = $this->applySort($query, $request, self::SORTABLE_COLUMNS, 'product_description')
             ->get()
-            ->map(fn (Stock $s) => [
-                'code' => $s->product_code,
-                'name' => $s->product_description,
-                'category' => $s->category,
-                'qty' => $s->quantity,
-                'reorder_point' => $s->reorder_point,
-                'selling_price' => number_format($s->selling_price, 2),
-            ]);
+            ->load(['defaultSupplier', 'batches' => fn ($q) => $q->active()->where('qty_on_hand', '>', 0)->orderBy('expiry_date')])
+            ->map(function (Stock $s) {
+                $nextBatch = $s->batches->first();
+
+                return [
+                    'code' => $s->product_code,
+                    'name' => $s->product_description,
+                    'generic_name' => $s->generic_name,
+                    'category' => $s->category,
+                    'manufacturer' => $s->manufacturer,
+                    'registration_number' => $s->registration_number,
+                    'controlled_substance_schedule' => $s->controlled_substance_schedule,
+                    'dosage_form' => $s->dosage_form,
+                    'strength' => $s->strength,
+                    'pack_size' => $s->pack_size,
+                    'unit_of_measure' => $s->unit_of_measure,
+                    'storage_condition' => $s->storage_condition,
+                    'qty' => $s->quantity,
+                    'reorder_point' => $s->reorder_point,
+                    'reorder_qty' => $s->reorder_qty,
+                    'buying_price' => number_format($s->buying_price, 2),
+                    'selling_price' => number_format($s->selling_price, 2),
+                    'tax_code' => $s->tax_code,
+                    'hs_code' => $s->hs_code,
+                    'default_supplier' => $s->defaultSupplier?->name,
+                    'next_batch_number' => $nextBatch?->batch_number,
+                    'next_expiry_date' => $nextBatch?->expiry_date?->format('Y-m-d'),
+                ];
+            });
 
         return $this->streamCsvExport('products-' . now()->format('Ymd_His') . '.csv', [
-            'code' => 'SKU', 'name' => 'Product', 'category' => 'Category',
-            'qty' => 'Qty on Hand', 'reorder_point' => 'Reorder Point', 'selling_price' => 'Selling Price',
+            'code' => 'SKU', 'name' => 'Product', 'generic_name' => 'Generic Name', 'category' => 'Category',
+            'manufacturer' => 'Manufacturer', 'registration_number' => 'Registration Number',
+            'controlled_substance_schedule' => 'Controlled Substance', 'dosage_form' => 'Dosage Form',
+            'strength' => 'Strength', 'pack_size' => 'Pack Size', 'unit_of_measure' => 'Unit of Measure',
+            'storage_condition' => 'Storage Condition', 'qty' => 'Qty on Hand', 'reorder_point' => 'Reorder Point',
+            'reorder_qty' => 'Reorder Qty', 'buying_price' => 'Buying Price', 'selling_price' => 'Selling Price',
+            'tax_code' => 'Tax Code', 'hs_code' => 'HS Code', 'default_supplier' => 'Default Supplier',
+            'next_batch_number' => 'Next Batch Number', 'next_expiry_date' => 'Next Expiry Date',
         ], $rows);
     }
 

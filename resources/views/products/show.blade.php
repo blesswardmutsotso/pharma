@@ -34,7 +34,12 @@
             <div><div class="label">Controlled Substance</div><div class="value">{{ $product->controlled_substance_schedule ?? 'Not controlled' }}</div></div>
             <div><div class="label">Qty on Hand</div><div class="value {{ $product->isLowStock() ? 'text-danger' : '' }}">{{ $product->quantity }}</div></div>
             <div><div class="label">Reorder Point / Qty</div><div class="value">{{ $product->reorder_point }} / {{ $product->reorder_qty }}</div></div>
+            <div><div class="label">Buying Price</div><div class="value">${{ number_format($product->buying_price, 2) }}</div></div>
             <div><div class="label">Selling Price</div><div class="value">${{ number_format($product->selling_price, 2) }}</div></div>
+            <div><div class="label">Default Supplier</div><div class="value">{{ $product->defaultSupplier?->name ?? '—' }}</div></div>
+            <div><div class="label">Batch Tracking</div><div class="value">{{ $product->requires_batch_tracking ? 'Required' : 'Not required' }}</div></div>
+            <div><div class="label">Tax Code</div><div class="value">{{ $product->tax_code ?? '—' }} ({{ number_format($product->tax_percentage ?? 0, 2) }}%)</div></div>
+            <div><div class="label">HS Code</div><div class="value">{{ $product->hs_code ?? '—' }}</div></div>
         </div>
     </div>
 
