@@ -69,6 +69,8 @@
     <thead>
         <tr>
             <th>Product</th>
+            <th>Batch</th>
+            <th>Expiry</th>
             <th class="text-end">Qty Ordered</th>
             <th class="text-end">Unit Price</th>
             <th class="text-end">Discount</th>
@@ -77,29 +79,50 @@
     </thead>
     <tbody>
         @foreach ($salesOrder->items as $item)
+            @php $allocations = $item->batchAllocations; @endphp
             <tr>
                 <td>{{ $item->product_code }} — {{ $item->product_description }}</td>
+                <td>
+                    @if ($allocations->isEmpty())
+                        —
+                    @elseif ($allocations->count() === 1)
+                        {{ $allocations->first()->stockBatch->batch_number }}
+                    @else
+                        Multiple (see below)
+                    @endif
+                </td>
+                <td>
+                    @if ($allocations->isEmpty())
+                        —
+                    @elseif ($allocations->count() === 1)
+                        {{ $allocations->first()->stockBatch->expiry_date?->format('Y-m-d') }}
+                    @else
+                        —
+                    @endif
+                </td>
                 <td class="text-end">{{ $item->qty_ordered }}</td>
                 <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
                 <td class="text-end">{{ number_format($item->discount, 2) }}</td>
                 <td class="text-end">{{ number_format($item->line_total, 2) }}</td>
             </tr>
-            @foreach ($item->batchAllocations as $allocation)
-                <tr style="font-size:9px;color:#6c757d;">
-                    <td colspan="4">Batch {{ $allocation->stockBatch->batch_number }} (exp {{ $allocation->stockBatch->expiry_date?->format('Y-m-d') }})</td>
-                    <td class="text-end">{{ $allocation->qty_allocated }} units</td>
-                </tr>
-            @endforeach
+            @if ($allocations->count() > 1)
+                @foreach ($allocations as $allocation)
+                    <tr style="font-size:9px;color:#6c757d;">
+                        <td colspan="5">Batch {{ $allocation->stockBatch->batch_number }} (exp {{ $allocation->stockBatch->expiry_date?->format('Y-m-d') }})</td>
+                        <td class="text-end" colspan="2">{{ $allocation->qty_allocated }} units</td>
+                    </tr>
+                @endforeach
+            @endif
             @if ($item->isBackordered())
                 <tr style="font-size:9px;color:#b80330;">
-                    <td colspan="4">Backordered — awaiting stock, no batch allocated yet</td>
-                    <td class="text-end">{{ $item->backorderedQty() }} units</td>
+                    <td colspan="5">Backordered — awaiting stock, no batch allocated yet</td>
+                    <td class="text-end" colspan="2">{{ $item->backorderedQty() }} units</td>
                 </tr>
             @endif
         @endforeach
     </tbody>
     <tfoot class="totals">
-        <tr><td colspan="4" class="text-end">Total ({{ $salesOrder->currency }})</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
+        <tr><td colspan="6" class="text-end">Total ({{ $salesOrder->currency }})</td><td class="text-end">{{ number_format($salesOrder->items->sum('line_total'), 2) }}</td></tr>
     </tfoot>
 </table>
 
