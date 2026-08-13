@@ -62,6 +62,7 @@
 
         <div class="form-section-title">Line Items</div>
         <div class="form-text mb-2">Products must be picked from the catalogue below — this is what keeps received stock showing up correctly on the Products list. If a product isn't listed yet, <a href="{{ route('products.create') }}" target="_blank" class="text-success">add it to the catalogue first</a>.</div>
+        <div class="form-text mb-2">Batch Number defaults to today's date (DDMMYYYY) — overwrite it with the manufacturer's actual lot number whenever you have it, for accurate recall traceability.</div>
         <div class="table-responsive">
             <table class="table" id="itemsTable">
                 <thead>
@@ -87,7 +88,7 @@
                         <td><input type="text" name="items[0][product_description]" class="form-control" readonly required></td>
                         <td><input type="number" name="items[0][qty_received]" class="form-control" min="1" required></td>
                         <td><input type="number" step="0.01" name="items[0][unit_cost]" class="form-control" min="0" required></td>
-                        <td><input type="text" name="items[0][batch_number]" class="form-control" required></td>
+                        <td><input type="text" name="items[0][batch_number]" class="form-control batch-number-input" value="{{ now()->format('dmY') }}" required></td>
                         <td><input type="date" name="items[0][expiry_date]" class="form-control" required></td>
                         <td>
                             <select name="items[0][status]" class="form-select" required>
@@ -120,6 +121,7 @@
 (function () {
     let itemIndex = 1;
     const tbody = document.getElementById('itemsBody');
+    const todayBatchNumber = @json(now()->format('dmY'));
 
     function wireRemoveButtons() {
         tbody.querySelectorAll('.remove-row').forEach(btn => {
@@ -132,7 +134,13 @@
     document.getElementById('addItemBtn').addEventListener('click', () => {
         const row = tbody.querySelector('tr').cloneNode(true);
         row.querySelectorAll('input, select').forEach(field => {
-            if (field.tagName === 'SELECT') field.selectedIndex = 0; else field.value = '';
+            if (field.tagName === 'SELECT') {
+                field.selectedIndex = 0;
+            } else if (field.classList.contains('batch-number-input')) {
+                field.value = todayBatchNumber;
+            } else {
+                field.value = '';
+            }
             field.name = field.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
         });
         row.querySelector('.product-search-results').style.display = 'none';

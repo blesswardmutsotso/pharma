@@ -113,7 +113,8 @@
 <div class="row g-3">
     <div class="col-md-3">
         <label class="form-label">Batch Number</label>
-        <input type="text" name="initial_batch_number" class="form-control" value="{{ old('initial_batch_number') }}">
+        <input type="text" name="initial_batch_number" class="form-control" value="{{ old('initial_batch_number', now()->format('dmY')) }}">
+        <div class="form-text">Defaults to today's date (DDMMYYYY) — overwrite with the manufacturer's actual lot number if you have it.</div>
     </div>
     <div class="col-md-3">
         <label class="form-label">Expiry Date</label>

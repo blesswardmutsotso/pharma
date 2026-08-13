@@ -65,12 +65,14 @@
             <table class="table" id="itemsTable">
                 <thead>
                     <tr>
-                        <th style="width:14%">Product Code</th>
+                        <th style="width:12%">Product Code</th>
                         <th>Description</th>
-                        <th style="width:9%">Qty</th>
-                        <th style="width:12%">Unit Price</th>
-                        <th style="width:12%">Discount</th>
-                        <th style="width:12%">Total</th>
+                        <th style="width:10%">Batch No.</th>
+                        <th style="width:9%">Expiry</th>
+                        <th style="width:8%">Qty</th>
+                        <th style="width:10%">Unit Price</th>
+                        <th style="width:10%">Discount</th>
+                        <th style="width:10%">Total</th>
                         <th style="width:40px"></th>
                     </tr>
                 </thead>
@@ -83,6 +85,8 @@
                             </div>
                         </td>
                         <td><input type="text" name="items[0][product_description]" class="form-control" required></td>
+                        <td><input type="text" class="form-control batch-display" disabled placeholder="—"></td>
+                        <td><input type="text" class="form-control expiry-display" disabled placeholder="—"></td>
                         <td><input type="number" name="items[0][qty]" class="form-control qty-input" min="1" required></td>
                         <td><input type="number" step="0.01" name="items[0][unit_price]" class="form-control unit-price-input" min="0" required></td>
                         <td><input type="number" step="0.01" name="items[0][discount]" class="form-control discount-input" min="0" value="0"></td>
@@ -170,6 +174,8 @@
     function fillRow(row, prefill) {
         row.querySelector('.product-search-input').value = prefill.code;
         row.querySelector('[name$="[product_description]"]').value = prefill.desc;
+        row.querySelector('.batch-display').value = prefill.batch || '—';
+        row.querySelector('.expiry-display').value = prefill.expiry || '—';
         row.querySelector('.qty-input').value = 1;
         row.dataset.usdPrice = prefill.price;
         row.querySelector('.unit-price-input').value = convertFromUsd(parseFloat(prefill.price) || 0).toFixed(2);
@@ -241,7 +247,8 @@
     function renderResultItem(p) {
         return `
             <div class="product-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
-                 data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
+                 data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}"
+                 data-batch="${p.batch_number || ''}" data-expiry="${p.expiry_date || ''}">
                 <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
                 <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
             </div>
@@ -286,6 +293,8 @@
         const row = item.closest('tr');
         row.querySelector('.product-search-input').value = item.dataset.code;
         row.querySelector('[name$="[product_description]"]').value = item.dataset.desc;
+        row.querySelector('.batch-display').value = item.dataset.batch || '—';
+        row.querySelector('.expiry-display').value = item.dataset.expiry || '—';
         row.dataset.usdPrice = item.dataset.price;
         row.querySelector('.unit-price-input').value = convertFromUsd(parseFloat(item.dataset.price) || 0).toFixed(2);
         recalcSummary();
@@ -328,7 +337,8 @@
 
                     quickSearchResults.innerHTML = products.map(p => `
                         <div class="quick-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
-                             data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}">
+                             data-code="${p.product_code}" data-desc="${p.product_description}" data-price="${p.selling_price}"
+                             data-batch="${p.batch_number || ''}" data-expiry="${p.expiry_date || ''}">
                             <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
                             <div class="text-muted">Price: ${Number(p.selling_price).toFixed(2)} &nbsp;·&nbsp; Qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
                         </div>
@@ -342,7 +352,7 @@
         const item = e.target.closest('.quick-search-item');
         if (!item) return;
 
-        addRow({ code: item.dataset.code, desc: item.dataset.desc, price: item.dataset.price });
+        addRow({ code: item.dataset.code, desc: item.dataset.desc, price: item.dataset.price, batch: item.dataset.batch, expiry: item.dataset.expiry });
 
         quickSearchInput.value = '';
         quickSearchResults.style.display = 'none';
