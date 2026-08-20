@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Concerns\Sortable;
+use App\Models\DeliveryNoteItem;
+use App\Models\GoodsReceivedNoteItem;
+use App\Models\QuotationItem;
+use App\Models\SalesInvoiceItem;
+use App\Models\SalesOrderItem;
 use App\Models\Stock;
 use App\Models\StockAuditLog;
 use App\Models\StockBatch;
@@ -299,13 +304,55 @@ class ProductController extends Controller implements HasMiddleware
         return redirect()->route('products.show', $product)->with('success', 'Product updated.');
     }
 
+    /**
+     * Any real-world trail (stock received, batches, or document lines)
+     * against this product_code — deleting it would silently orphan that
+     * history and, since stock_batches cascades on delete, destroy received
+     * stock with no trace. Once a product has moved, it's archived instead.
+     */
+    private function deletionBlockers(string $productCode): array
+    {
+        $checks = [
+            'goods received notes' => GoodsReceivedNoteItem::where('product_code', $productCode)->exists(),
+            'stock batches' => StockBatch::where('product_code', $productCode)->exists(),
+            'sales orders' => SalesOrderItem::where('product_code', $productCode)->exists(),
+            'quotations' => QuotationItem::where('product_code', $productCode)->exists(),
+            'delivery notes' => DeliveryNoteItem::where('product_code', $productCode)->exists(),
+            'sales invoices' => SalesInvoiceItem::where('product_code', $productCode)->exists(),
+        ];
+
+        return array_keys(array_filter($checks));
+    }
+
     public function destroy(Stock $product)
     {
         if (!auth()->user()->isAdmin()) {
             return back()->with('error', 'Only administrators can delete products.');
         }
 
+        $blockers = $this->deletionBlockers($product->product_code);
+
+        if (!empty($blockers)) {
+            return back()->with('error', sprintf(
+                '%s cannot be deleted — it has history in: %s. Deleting it would permanently erase that trail, including any received stock batches.',
+                $product->product_code,
+                implode(', ', $blockers)
+            ));
+        }
+
+        $productCode = $product->product_code;
+        $productDescription = $product->product_description;
+
         $product->delete();
+
+        StockAuditLog::record(
+            action: StockAuditLog::STOCK_DELETE,
+            productCode: $productCode,
+            productDescription: $productDescription,
+            qtyBefore: 0,
+            qtyAfter: 0,
+            notes: 'Product deleted from catalogue by ' . (auth()->user()->name ?? 'unknown user') . ' — had no stock/document history.'
+        );
 
         return redirect()->route('products.index')->with('success', 'Product deleted.');
     }
