@@ -36,7 +36,6 @@
             <img src="{{ public_path('logo.png') }}" class="company-logo">
         @endif
         <div>
-            <div class="company">{{ config('company.name') }}</div>
             <div style="font-size:9px;color:#6c757d;">
                 {{ config('company.address') }}
                 @if (config('company.tin')) &nbsp;·&nbsp; TIN: {{ config('company.tin') }} @endif
