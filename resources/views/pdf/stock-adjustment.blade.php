@@ -76,7 +76,7 @@
             <tr>
                 <td>{{ $item->product_code }} — {{ $item->product_description }}</td>
                 <td>{{ $item->batch_number ?? '—' }}</td>
-                <td>{{ $item->stockBatch?->expiry_date?->format('Y-m-d') ?? '—' }}</td>
+                <td>{{ ($item->stockBatch?->expiry_date ?? $item->expiry_date)?->format('Y-m-d') ?? '—' }}</td>
                 <td class="text-end">{{ $item->qty_system }}</td>
                 <td class="text-end">{{ $item->qty_counted }}</td>
                 <td class="text-end">{{ $item->qty_variance > 0 ? '+' : '' }}{{ $item->qty_variance }}</td>

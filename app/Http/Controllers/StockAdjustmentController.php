@@ -101,8 +101,46 @@ class StockAdjustmentController extends Controller implements HasMiddleware
             'items.*.product_code' => ['required', 'string', 'max:100'],
             'items.*.product_description' => ['required', 'string', 'max:255'],
             'items.*.batch_number' => ['nullable', 'string', 'max:100'],
+            'items.*.expiry_date' => ['nullable', 'date'],
             'items.*.qty_counted' => ['required', 'integer', 'min:0'],
         ]);
+
+        // Found-stock lines (counted > what's actually in the batch system) that
+        // aren't tied to an existing batch need a batch number + expiry date to
+        // become a real, FEFO-allocatable batch on approval — otherwise the
+        // "extra" stock would only ever exist as an aggregate number that Sales
+        // Orders/invoicing can never actually allocate against.
+        $lineErrors = [];
+        foreach ($validated['items'] as $index => $item) {
+            $batch = null;
+            if (!empty($item['batch_number'])) {
+                $batchQuery = StockBatch::where('product_code', $item['product_code'])
+                    ->where('batch_number', $item['batch_number']);
+                if (!empty($validated['branch_id'])) {
+                    $batchQuery->where('branch_id', $validated['branch_id']);
+                }
+                $batch = $batchQuery->first();
+            }
+
+            if ($batch) {
+                continue;
+            }
+
+            $batchesQuery = StockBatch::where('product_code', $item['product_code'])->active();
+            if (!empty($validated['branch_id'])) {
+                $batchesQuery->atBranch($validated['branch_id']);
+            }
+            $qtySystem = (int) $batchesQuery->sum('qty_on_hand');
+            $variance = (int) $item['qty_counted'] - $qtySystem;
+
+            if ($variance > 0 && (empty($item['batch_number']) || empty($item['expiry_date']))) {
+                $lineErrors["items.{$index}.expiry_date"] = "Row " . ($index + 1) . " ({$item['product_code']}): counted more than the system has on record ({$qtySystem}) without matching an existing batch — provide a batch number and expiry date for the extra stock found.";
+            }
+        }
+
+        if (!empty($lineErrors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($lineErrors);
+        }
 
         $adjustment = DB::transaction(function () use ($validated) {
             $adjustment = StockAdjustment::create([
@@ -127,7 +165,17 @@ class StockAdjustmentController extends Controller implements HasMiddleware
                 }
 
                 $stock = Stock::where('product_code', $item['product_code'])->first();
-                $qtySystem = $batch ? $batch->qty_on_hand : (int) ($stock?->quantity ?? 0);
+
+                if ($batch) {
+                    $qtySystem = $batch->qty_on_hand;
+                } else {
+                    $batchesQuery = StockBatch::where('product_code', $item['product_code'])->active();
+                    if (!empty($validated['branch_id'])) {
+                        $batchesQuery->atBranch($validated['branch_id']);
+                    }
+                    $qtySystem = (int) $batchesQuery->sum('qty_on_hand');
+                }
+
                 $qtyCounted = (int) $item['qty_counted'];
 
                 StockAdjustmentItem::create([
@@ -136,6 +184,7 @@ class StockAdjustmentController extends Controller implements HasMiddleware
                     'product_description' => $item['product_description'],
                     'stock_batch_id' => $batch?->id,
                     'batch_number' => $item['batch_number'] ?? null,
+                    'expiry_date' => $item['expiry_date'] ?? null,
                     'qty_system' => $qtySystem,
                     'qty_counted' => $qtyCounted,
                     'qty_variance' => $qtyCounted - $qtySystem,
@@ -176,6 +225,21 @@ class StockAdjustmentController extends Controller implements HasMiddleware
             return back()->with('error', 'Only draft or submitted adjustments can be approved.');
         }
 
+        // Adjustments submitted before this fix (or via a stale cached page)
+        // could still be missing batch/expiry info for a found-stock line —
+        // refuse to approve rather than fabricate an expiry date or silently
+        // fall back to the old aggregate-only write.
+        $incomplete = $stockAdjustment->items->first(
+            fn (StockAdjustmentItem $item) => !$item->stock_batch_id && $item->qty_variance > 0 && (!$item->batch_number || !$item->expiry_date)
+        );
+
+        if ($incomplete) {
+            return back()->with('error', sprintf(
+                'Cannot approve — %s counts more than the system has on record but has no batch number/expiry date to create a real batch for the extra stock. Reject this adjustment and resubmit it with that information.',
+                $incomplete->product_code
+            ));
+        }
+
         DB::transaction(function () use ($stockAdjustment) {
             foreach ($stockAdjustment->items as $item) {
                 if ($item->qty_variance === 0) {
@@ -183,6 +247,8 @@ class StockAdjustmentController extends Controller implements HasMiddleware
                 }
 
                 if ($item->stock_batch_id) {
+                    // Matched an existing batch — adjust it directly (e.g. a
+                    // recount of a specific batch, or damage found within it).
                     $batch = StockBatch::find($item->stock_batch_id);
                     if ($batch) {
                         $batch->qty_on_hand = max(0, $batch->qty_on_hand + $item->qty_variance);
@@ -191,18 +257,52 @@ class StockAdjustmentController extends Controller implements HasMiddleware
                         }
                         $batch->save();
                     }
+                } elseif ($item->qty_variance > 0) {
+                    // Found stock with no matching batch — create a real,
+                    // FEFO-allocatable batch instead of only bumping the
+                    // aggregate quantity (which Sales Orders never read from).
+                    StockBatch::create([
+                        'product_code' => $item->product_code,
+                        'branch_id' => $stockAdjustment->branch_id,
+                        'batch_number' => $item->batch_number,
+                        'expiry_date' => $item->expiry_date,
+                        'qty_on_hand' => $item->qty_variance,
+                        'unit_cost' => $item->unit_cost,
+                        'status' => StockBatch::STATUS_ACTIVE,
+                        'source_type' => 'StockAdjustment',
+                        'source_id' => $stockAdjustment->id,
+                    ]);
+                } else {
+                    // Shrinkage (damage/theft/miscount) not tied to one batch —
+                    // absorb it from real batches, oldest-expiry first, so the
+                    // reduction actually removes allocatable stock rather than
+                    // just hiding it behind the aggregate quantity.
+                    $toRemove = abs($item->qty_variance);
+                    $batchesQuery = StockBatch::where('product_code', $item->product_code)->orderedForFefo();
+                    if ($stockAdjustment->branch_id) {
+                        $batchesQuery->atBranch($stockAdjustment->branch_id);
+                    }
+                    foreach ($batchesQuery->get() as $batch) {
+                        if ($toRemove <= 0) {
+                            break;
+                        }
+                        $take = min($batch->qty_on_hand, $toRemove);
+                        if ($take <= 0) {
+                            continue;
+                        }
+                        $batch->qty_on_hand -= $take;
+                        if ($batch->qty_on_hand === 0) {
+                            $batch->status = StockBatch::STATUS_DEPLETED;
+                        }
+                        $batch->save();
+                        $toRemove -= $take;
+                    }
                 }
 
                 $stock = Stock::where('product_code', $item->product_code)->first();
                 if ($stock) {
                     $qtyBefore = $stock->quantity;
-
-                    if ($item->stock_batch_id) {
-                        $stock->syncQuantityFromBatches();
-                    } else {
-                        $stock->quantity = max(0, $stock->quantity + $item->qty_variance);
-                        $stock->save();
-                    }
+                    $stock->syncQuantityFromBatches();
 
                     StockAuditLog::record(
                         action: StockAuditLog::ADJUSTMENT,

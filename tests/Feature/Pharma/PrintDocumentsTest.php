@@ -372,6 +372,14 @@ class PrintDocumentsTest extends TestCase
         $this->assertStringContainsString('Crown Bank Limited', $grnHtml);
 
         $product = Stock::factory()->create(['product_code' => 'MOB-3', 'quantity' => 10]);
+        StockBatch::create([
+            'product_code' => 'MOB-3',
+            'batch_number' => 'MOB-3-BATCH',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 10,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
         $this->post('/stock-adjustments', [
             'type' => \App\Models\StockAdjustment::TYPE_STOCK_TAKE,
             'reason' => 'Mobile/banking PDF test',
@@ -392,6 +400,14 @@ class PrintDocumentsTest extends TestCase
         $this->actingAsAdmin();
 
         $product = Stock::factory()->create(['product_code' => 'PDF-ADJ-1', 'quantity' => 10]);
+        StockBatch::create([
+            'product_code' => 'PDF-ADJ-1',
+            'batch_number' => 'PDF-ADJ-1-BATCH',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 10,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
 
         $this->post('/stock-adjustments', [
             'type' => \App\Models\StockAdjustment::TYPE_STOCK_TAKE,

@@ -41,8 +41,11 @@
 
         <div class="form-section-title">Lines</div>
         <div class="alert alert-light border small mb-3">
-            Leave <strong>Batch Number</strong> blank to adjust the product's overall quantity instead of a specific batch.
-            The system quantity is captured automatically when you submit — enter what you physically counted.
+            Leave <strong>Batch Number</strong> blank to count against a product's total across all its batches.
+            If what you counted is <strong>lower</strong> than the system total, the shortfall is removed from
+            existing batches automatically (oldest-expiry first). If it's <strong>higher</strong> — you found stock
+            the system doesn't know about — you must give it a batch number and expiry date so it becomes real,
+            sellable stock rather than just a number on this page.
         </div>
         <div class="table-responsive">
             <table class="table table-sm" id="itemsTable">
@@ -50,7 +53,8 @@
                     <tr>
                         <th>Product Code</th>
                         <th>Product Description</th>
-                        <th>Batch Number (optional)</th>
+                        <th>Batch Number</th>
+                        <th>Expiry Date (required if found stock is extra)</th>
                         <th>Qty Counted</th>
                         <th></th>
                     </tr>
@@ -60,6 +64,7 @@
                         <td><input type="text" name="items[0][product_code]" class="form-control" required></td>
                         <td><input type="text" name="items[0][product_description]" class="form-control" required></td>
                         <td><input type="text" name="items[0][batch_number]" class="form-control"></td>
+                        <td><input type="date" name="items[0][expiry_date]" class="form-control"></td>
                         <td><input type="number" name="items[0][qty_counted]" class="form-control" min="0" required></td>
                         <td><button type="button" class="btn-action remove-row" title="Remove"><i class="bi bi-trash"></i></button></td>
                     </tr>

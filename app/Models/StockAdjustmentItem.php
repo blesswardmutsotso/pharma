@@ -12,6 +12,7 @@ class StockAdjustmentItem extends Model
         'product_description',
         'stock_batch_id',
         'batch_number',
+        'expiry_date',
         'qty_system',
         'qty_counted',
         'qty_variance',
@@ -19,6 +20,7 @@ class StockAdjustmentItem extends Model
     ];
 
     protected $casts = [
+        'expiry_date'  => 'date',
         'qty_system'   => 'integer',
         'qty_counted'  => 'integer',
         'qty_variance' => 'integer',
