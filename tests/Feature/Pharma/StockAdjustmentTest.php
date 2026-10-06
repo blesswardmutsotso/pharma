@@ -239,6 +239,49 @@ class StockAdjustmentTest extends TestCase
         $this->assertSame(0, $product->fresh()->quantity);
     }
 
+    /**
+     * Same question as the GRN case, via Stock Adjustment: existing stock
+     * of 7 plus a "found 10 more" adjustment must total 17, not replace the
+     * existing 7 with the newly found 10.
+     */
+    public function test_found_stock_adjustment_adds_to_existing_stock_instead_of_replacing_it(): void
+    {
+        $this->actingAsRole(User::ROLE_INVENTORY_MANAGER);
+
+        $product = Stock::factory()->create(['product_code' => 'ADJ-7', 'quantity' => 7]);
+        StockBatch::create([
+            'product_code' => 'ADJ-7',
+            'batch_number' => 'ADJ-7-EXISTING',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 7,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
+
+        $this->post('/stock-adjustments', [
+            'type' => StockAdjustment::TYPE_STOCK_TAKE,
+            'reason' => 'Found extra stock',
+            'items' => [[
+                'product_code' => 'ADJ-7',
+                'product_description' => $product->product_description,
+                'batch_number' => 'ADJ-7-NEW',
+                'expiry_date' => now()->addYear()->toDateString(),
+                'qty_counted' => 17,
+            ]],
+        ])->assertRedirect();
+
+        $adjustment = StockAdjustment::where('reason', 'Found extra stock')->firstOrFail();
+        $item = $adjustment->items()->firstOrFail();
+        $this->assertSame(7, $item->qty_system, 'System total before the count should be the existing 7.');
+        $this->assertSame(10, $item->qty_variance, 'Counting 17 against a system total of 7 is a +10 variance.');
+
+        $this->post("/stock-adjustments/{$adjustment->id}/approve")->assertRedirect();
+
+        $this->assertSame(17, $product->fresh()->quantity, 'Existing 7 plus found 10 must total 17, not replace it with 10.');
+        $this->assertSame(7, StockBatch::where('batch_number', 'ADJ-7-EXISTING')->value('qty_on_hand'));
+        $this->assertSame(10, StockBatch::where('batch_number', 'ADJ-7-NEW')->value('qty_on_hand'));
+    }
+
     public function test_rejected_adjustment_makes_no_stock_changes(): void
     {
         $this->actingAsRole(User::ROLE_INVENTORY_MANAGER);

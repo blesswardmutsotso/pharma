@@ -133,6 +133,67 @@ class ProductBatchLedgerTest extends TestCase
         $this->assertSame(StockBatch::STATUS_ACTIVE, $batch->status);
     }
 
+    /**
+     * Mirrors a real support question: if the system already has 7 units of
+     * a product and a new delivery brings in 10 more, the total must become
+     * 17 — not get replaced by the new delivery's 10.
+     */
+    public function test_receiving_a_second_grn_adds_to_existing_stock_instead_of_replacing_it(): void
+    {
+        $this->actingAsAuthenticatedUser();
+
+        $product = Stock::factory()->create([
+            'product_code' => 'PRD-201',
+            'product_description' => 'Paracetamol 500mg',
+            'quantity' => 0,
+        ]);
+        $supplier = Supplier::factory()->create(['status' => 'active']);
+
+        // Existing stock: 7 units already on hand via an earlier GRN.
+        $this->post('/goods-received-notes', [
+            'grn_number' => 'GRN-FIRST',
+            'supplier_id' => $supplier->id,
+            'received_date' => now()->toDateString(),
+            'status' => 'received',
+            'items' => [[
+                'product_code' => 'PRD-201',
+                'product_description' => 'Paracetamol 500mg',
+                'qty_received' => 7,
+                'unit_cost' => 1.20,
+                'batch_number' => 'BATCH-EXISTING',
+                'expiry_date' => now()->addYear()->toDateString(),
+                'status' => 'accepted',
+            ]],
+        ])->assertRedirect(route('goods-received-notes.index'));
+
+        $product->refresh();
+        $this->assertSame(7, $product->quantity, 'Sanity check: first GRN should leave 7 on hand.');
+
+        // New delivery: another 10 units via a second GRN.
+        $this->post('/goods-received-notes', [
+            'grn_number' => 'GRN-SECOND',
+            'supplier_id' => $supplier->id,
+            'received_date' => now()->toDateString(),
+            'status' => 'received',
+            'items' => [[
+                'product_code' => 'PRD-201',
+                'product_description' => 'Paracetamol 500mg',
+                'qty_received' => 10,
+                'unit_cost' => 1.20,
+                'batch_number' => 'BATCH-NEW',
+                'expiry_date' => now()->addYear()->toDateString(),
+                'status' => 'accepted',
+            ]],
+        ])->assertRedirect(route('goods-received-notes.index'));
+
+        $product->refresh();
+        $this->assertSame(17, $product->quantity, 'The new delivery must ADD to existing stock (7+10=17), not replace it.');
+
+        $this->assertSame(7, StockBatch::where('batch_number', 'BATCH-EXISTING')->value('qty_on_hand'));
+        $this->assertSame(10, StockBatch::where('batch_number', 'BATCH-NEW')->value('qty_on_hand'));
+        $this->assertSame(2, StockBatch::where('product_code', 'PRD-201')->count());
+    }
+
     public function test_rejected_grn_line_does_not_create_a_batch_or_increase_stock(): void
     {
         $this->actingAsAuthenticatedUser();
