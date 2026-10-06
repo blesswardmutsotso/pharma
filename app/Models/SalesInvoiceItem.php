@@ -35,4 +35,28 @@ class SalesInvoiceItem extends Model
     {
         return $this->belongsTo(SalesInvoice::class);
     }
+
+    public function creditNoteItems()
+    {
+        return $this->hasMany(SalesCreditNoteItem::class, 'sales_invoice_item_id');
+    }
+
+    /**
+     * Units already credited back against this invoice line, across every
+     * return recorded so far (possibly several separate transactions).
+     */
+    public function returnedQty(): int
+    {
+        return (int) $this->creditNoteItems()->sum('qty');
+    }
+
+    /**
+     * Units still eligible to be returned — caps cumulative returns at what
+     * was actually invoiced on this line, no matter how many separate
+     * return transactions it's split across.
+     */
+    public function returnableQty(): int
+    {
+        return max($this->qty - $this->returnedQty(), 0);
+    }
 }

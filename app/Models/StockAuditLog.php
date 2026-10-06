@@ -20,6 +20,7 @@ class StockAuditLog extends Model
     const IMPORT        = 'IMPORT';
     const GRN_DISCREPANCY = 'GRN_DISCREPANCY';
     const ADJUSTMENT    = 'ADJUSTMENT';
+    const SCRAP         = 'SCRAP';
 
     protected $fillable = [
         'product_code', 'product_description', 'action',
@@ -79,6 +80,7 @@ class StockAuditLog extends Model
             self::IMPORT       => 'Import',
             self::GRN_DISCREPANCY => 'GRN Discrepancy',
             self::ADJUSTMENT   => 'Stock Adjustment',
+            self::SCRAP        => 'Scrapped / Destroyed',
             default            => ucwords(strtolower(str_replace('_', ' ', $this->action))),
         };
     }
@@ -87,7 +89,7 @@ class StockAuditLog extends Model
     {
         return match ($this->action) {
             self::STOCK_IN, self::TRANSFER_IN, self::RETURN_GOODS, self::IMPORT => 'green',
-            self::SALE, self::TRANSFER_OUT, self::STOCK_DELETE                  => 'red',
+            self::SALE, self::TRANSFER_OUT, self::STOCK_DELETE, self::SCRAP     => 'red',
             self::GRN_DISCREPANCY => 'amber',
             self::ADJUSTMENT => 'amber',
             default => 'amber',

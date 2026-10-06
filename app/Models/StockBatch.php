@@ -13,6 +13,7 @@ class StockBatch extends Model
     const STATUS_QUARANTINE = 'quarantine';
     const STATUS_EXPIRED    = 'expired';
     const STATUS_DEPLETED   = 'depleted';
+    const STATUS_SCRAPPED   = 'scrapped';
 
     protected $fillable = [
         'product_code',

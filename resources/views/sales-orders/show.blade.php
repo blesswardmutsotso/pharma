@@ -118,32 +118,11 @@
         </div>
     </div>
 
-    @if ($salesOrder->status === 'dispatched')
-        <div class="detail-card">
-            <div class="card-title"><i class="bi bi-arrow-counterclockwise me-1"></i>Record a Return</div>
-            <form action="{{ route('sales-orders.return', $salesOrder) }}" method="POST" class="row g-3 align-items-end"
-                  data-confirm="Record this return? The quantity will be quarantined pending inspection." data-confirm-icon="question">
-                @csrf
-                <div class="col-md-4">
-                    <label class="form-label">Item</label>
-                    <select name="sales_order_item_id" class="form-select" required>
-                        @foreach ($salesOrder->items as $item)
-                            <option value="{{ $item->id }}">{{ $item->product_code }} — {{ $item->product_description }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Qty</label>
-                    <input type="number" name="qty" class="form-control" min="1" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Reason</label>
-                    <input type="text" name="reason" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-arrow-counterclockwise me-1"></i>Record</button>
-                </div>
-            </form>
+    @if ($salesOrder->invoice)
+        <div class="alert alert-light border small">
+            <i class="bi bi-info-circle me-1"></i>To record a return against this order, open its
+            <a href="{{ route('sales-invoices.show', $salesOrder->invoice) }}">invoice ({{ $salesOrder->invoice->invoice_number }})</a>
+            — returns are recorded per invoice line so the credit note matches exactly what's being sent back.
         </div>
     @endif
 

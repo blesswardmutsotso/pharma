@@ -10,7 +10,6 @@ use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\Stock;
 use App\Models\StockAuditLog;
-use App\Models\StockBatch;
 use App\Services\DeliveryNoteGenerationService;
 use App\Services\FefoAllocationService;
 use App\Services\SalesInvoiceGenerationService;
@@ -30,7 +29,7 @@ class SalesOrderController extends Controller implements HasMiddleware
         return [
             new Middleware('role:admin,manager,sales', only: ['create', 'store']),
             new Middleware('role:admin,manager,supervisor,sales', only: ['confirm', 'cancel', 'allocateRemaining']),
-            new Middleware('role:admin,manager,supervisor,sales,warehouse', only: ['startPicking', 'dispatch', 'returnItem']),
+            new Middleware('role:admin,manager,supervisor,sales,warehouse', only: ['startPicking', 'dispatch']),
         ];
     }
 
@@ -145,7 +144,7 @@ class SalesOrderController extends Controller implements HasMiddleware
 
     public function show(SalesOrder $salesOrder)
     {
-        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch', 'deliveryNote']);
+        $salesOrder->load(['client', 'branch', 'createdBy', 'confirmedBy', 'items.batchAllocations.stockBatch', 'deliveryNote', 'invoice']);
 
         return view('sales-orders.show', compact('salesOrder'));
     }
@@ -313,53 +312,4 @@ class SalesOrderController extends Controller implements HasMiddleware
         return back()->with('success', 'Sales order cancelled and reserved stock released.');
     }
 
-    /**
-     * Customer return — goods go to quarantine pending inspection rather
-     * than straight back into sellable stock.
-     */
-    public function returnItem(Request $request, SalesOrder $salesOrder)
-    {
-        $validated = $request->validate([
-            'sales_order_item_id' => ['required', 'exists:sales_order_items,id'],
-            'qty' => ['required', 'integer', 'min:1'],
-            'reason' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        $item = SalesOrderItem::where('sales_order_id', $salesOrder->id)
-            ->findOrFail($validated['sales_order_item_id']);
-
-        DB::transaction(function () use ($item, $validated, $salesOrder) {
-            $stock = Stock::where('product_code', $item->product_code)->first();
-            $qtyBefore = $stock?->quantity ?? 0;
-
-            StockBatch::create([
-                'product_code' => $item->product_code,
-                'batch_number' => 'RETURN-' . $salesOrder->so_number,
-                'expiry_date' => now()->addYear(),
-                'qty_on_hand' => $validated['qty'],
-                'unit_cost' => $item->unit_price,
-                'status' => StockBatch::STATUS_QUARANTINE,
-                'source_type' => 'SalesOrderReturn',
-                'source_id' => $salesOrder->id,
-            ]);
-
-            if ($stock) {
-                $stock->syncQuantityFromBatches();
-
-                StockAuditLog::record(
-                    action: StockAuditLog::RETURN_GOODS,
-                    productCode: $item->product_code,
-                    productDescription: $item->product_description,
-                    qtyBefore: $qtyBefore,
-                    qtyAfter: $stock->quantity,
-                    notes: 'Return from sales order ' . $salesOrder->so_number . ': ' . ($validated['reason'] ?? ''),
-                    referenceType: 'SalesOrder',
-                    referenceId: $salesOrder->id,
-                    referenceLabel: $salesOrder->so_number,
-                );
-            }
-        });
-
-        return back()->with('success', 'Return recorded — goods quarantined pending inspection.');
-    }
 }

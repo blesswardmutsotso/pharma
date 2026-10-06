@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\StockBatch;
+use App\Services\SalesReturnService;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\ValidationException;
 
 class StockBatchController extends Controller implements HasMiddleware
 {
@@ -17,15 +20,34 @@ class StockBatchController extends Controller implements HasMiddleware
      * Release a quarantined batch back into sellable stock once it has
      * passed inspection (BRD FR-STK-005 quarantine workflow).
      */
-    public function release(StockBatch $batch)
+    public function release(StockBatch $batch, SalesReturnService $returns)
     {
-        if ($batch->status !== StockBatch::STATUS_QUARANTINE) {
-            return back()->with('error', 'Only quarantined batches can be released.');
+        try {
+            $returns->releaseFromQuarantine($batch);
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
         }
 
-        $batch->update(['status' => StockBatch::STATUS_ACTIVE]);
-        $batch->stock?->syncQuantityFromBatches();
-
         return back()->with('success', "Batch {$batch->batch_number} released from quarantine.");
+    }
+
+    /**
+     * Permanently write off a quarantined batch that failed inspection
+     * (damaged, broken cold chain, tampered) — it can never re-enter
+     * sellable stock. Does not affect any credit note already issued for it.
+     */
+    public function scrap(Request $request, StockBatch $batch, SalesReturnService $returns)
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        try {
+            $returns->scrapBatch($batch, $validated['reason']);
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
+        }
+
+        return back()->with('success', "Batch {$batch->batch_number} scrapped — permanently removed from sellable stock.");
     }
 }

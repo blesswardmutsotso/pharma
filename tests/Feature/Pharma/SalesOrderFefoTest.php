@@ -291,43 +291,8 @@ class SalesOrderFefoTest extends TestCase
         $this->assertSame(0, $so->items()->first()->qty_allocated);
     }
 
-    public function test_return_after_dispatch_creates_quarantined_batch(): void
-    {
-        $this->actingAsAuthenticatedUser();
-        $client = $this->createClient();
-
-        $product = Stock::factory()->create(['product_code' => 'PRD-SO-5', 'quantity' => 0]);
-        StockBatch::create([
-            'product_code' => 'PRD-SO-5',
-            'batch_number' => 'B1',
-            'expiry_date' => now()->addYear(),
-            'qty_on_hand' => 20,
-            'unit_cost' => 1,
-            'status' => StockBatch::STATUS_ACTIVE,
-        ]);
-
-        $so = $this->createSalesOrder($client, 'PRD-SO-5', 10);
-        $this->post("/sales-orders/{$so->id}/confirm");
-        $this->post("/sales-orders/{$so->id}/start-picking");
-        $this->post("/sales-orders/{$so->id}/dispatch");
-
-        $item = $so->items()->first();
-
-        $this->post("/sales-orders/{$so->id}/return", [
-            'sales_order_item_id' => $item->id,
-            'qty' => 3,
-            'reason' => 'Damaged packaging',
-        ])->assertRedirect();
-
-        $this->assertDatabaseHas('stock_batches', [
-            'product_code' => 'PRD-SO-5',
-            'status' => StockBatch::STATUS_QUARANTINE,
-            'qty_on_hand' => 3,
-        ]);
-
-        // Quarantined returns must not count as sellable stock.
-        $this->assertSame(10, $product->fresh()->quantity);
-    }
+    // Returns now go through the unified invoice-based flow — see
+    // tests/Feature/Pharma/SalesReturnAndCreditNoteTest.php.
 
     public function test_quotation_converts_to_draft_sales_order_with_matching_items(): void
     {

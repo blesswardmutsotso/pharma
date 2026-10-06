@@ -183,7 +183,7 @@
         .badge-draft, .badge-unpaid       { background: #e9ecef; color: #495057; }
         .badge-pending, .badge-submitted, .badge-picking, .badge-partially_paid { background: #fff3cd; color: #a16207; }
         .badge-approved, .badge-active, .badge-confirmed, .badge-received, .badge-dispatched, .badge-invoiced, .badge-completed, .badge-paid, .badge-accepted { background: #d1e7dd; color: #145c2d; }
-        .badge-rejected, .badge-cancelled, .badge-quarantine, .badge-inactive, .badge-expired, .badge-overdue { background: #fee2e2; color: #b91c1c; }
+        .badge-rejected, .badge-cancelled, .badge-quarantine, .badge-inactive, .badge-expired, .badge-overdue, .badge-scrapped { background: #fee2e2; color: #b91c1c; }
         .badge-closed, .badge-converted  { background: #dbeafe; color: #1d4ed8; }
 
         .inv-no { font-family: 'Courier New', monospace; font-size: .8rem; color: #495057; font-weight: 600; }

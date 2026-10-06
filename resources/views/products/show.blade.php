@@ -73,10 +73,16 @@
                             <td><span class="badge-status badge-{{ $batch->status }}">{{ ucfirst($batch->status) }}</span></td>
                             <td class="text-center">
                                 @if ($batch->status === 'quarantine')
-                                    <form action="{{ route('stock-batches.release', $batch) }}" method="POST"
+                                    <form action="{{ route('stock-batches.release', $batch) }}" method="POST" class="mb-1"
                                           data-confirm="Release batch {{ $batch->batch_number }} from quarantine into sellable stock?" data-confirm-icon="question">
                                         @csrf
-                                        <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-unlock me-1"></i>Release</button>
+                                        <button type="submit" class="btn-action"><i class="bi bi-unlock"></i> Release</button>
+                                    </form>
+                                    <form action="{{ route('stock-batches.scrap', $batch) }}" method="POST" class="d-flex gap-1 justify-content-center"
+                                          data-confirm="Scrap batch {{ $batch->batch_number }}? This permanently removes it from stock and cannot be undone." data-confirm-danger="true">
+                                        @csrf
+                                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason to scrap" required style="max-width:140px;">
+                                        <button type="submit" class="btn-action text-danger"><i class="bi bi-trash3"></i> Scrap</button>
                                     </form>
                                 @endif
                             </td>

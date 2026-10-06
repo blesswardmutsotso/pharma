@@ -128,6 +128,22 @@ class SalesInvoice extends Model
     }
 
     /**
+     * True once credits (typically from goods returns) exceed what's left
+     * to collect — the wholesaler now owes the client, not the other way
+     * round. Surfaced separately so the UI never shows this as a negative
+     * "amount owed".
+     */
+    public function hasRefundDue(): bool
+    {
+        return $this->balance() < -0.005;
+    }
+
+    public function refundDue(): float
+    {
+        return $this->hasRefundDue() ? round(abs($this->balance()), 2) : 0.0;
+    }
+
+    /**
      * Recompute status from payments/credits recorded so far. Called after
      * every payment allocation or credit note.
      */

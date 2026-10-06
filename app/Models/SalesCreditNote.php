@@ -9,11 +9,16 @@ class SalesCreditNote extends Model
 {
     use HasFactory;
 
+    const TYPE_ADJUSTMENT = 'adjustment';
+    const TYPE_RETURN     = 'return';
+
     protected $fillable = [
         'credit_note_number',
         'sales_invoice_id',
+        'sales_order_id',
         'amount',
         'reason',
+        'type',
         'created_by',
     ];
 
@@ -26,9 +31,24 @@ class SalesCreditNote extends Model
         return $this->belongsTo(SalesInvoice::class);
     }
 
+    public function salesOrder()
+    {
+        return $this->belongsTo(SalesOrder::class);
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SalesCreditNoteItem::class);
+    }
+
+    public function isGoodsReturn(): bool
+    {
+        return $this->type === self::TYPE_RETURN;
     }
 
     public function amountInUsd(): float

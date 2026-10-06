@@ -110,6 +110,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::post('/products/export',     [ProductController::class, 'export'])->name('products.export');
     Route::resource('products', ProductController::class);
     Route::post('/stock-batches/{batch}/release', [StockBatchController::class, 'release'])->name('stock-batches.release');
+    Route::post('/stock-batches/{batch}/scrap',   [StockBatchController::class, 'scrap'])->name('stock-batches.scrap');
 
     // ── Suppliers & Procurement ──
     Route::post('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
@@ -140,7 +141,6 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::get('/sales-orders/{salesOrder}/picking-list',   [SalesOrderController::class, 'pickingList'])->name('sales-orders.picking-list');
     Route::post('/sales-orders/{salesOrder}/dispatch',      [SalesOrderController::class, 'dispatch'])->name('sales-orders.dispatch');
     Route::post('/sales-orders/{salesOrder}/cancel',        [SalesOrderController::class, 'cancel'])->name('sales-orders.cancel');
-    Route::post('/sales-orders/{salesOrder}/return',        [SalesOrderController::class, 'returnItem'])->name('sales-orders.return');
 
     Route::post('/delivery-notes/export', [DeliveryNoteController::class, 'export'])->name('delivery-notes.export');
     Route::resource('delivery-notes', DeliveryNoteController::class)->only(['index', 'show']);
@@ -151,6 +151,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
     Route::resource('sales-invoices', SalesInvoiceController::class)->only(['index', 'show']);
     Route::get('/sales-invoices/{salesInvoice}/pdf', [SalesInvoiceController::class, 'pdf'])->name('sales-invoices.pdf');
     Route::post('/sales-invoices/{salesInvoice}/credit-notes', [SalesCreditNoteController::class, 'store'])->name('sales-invoices.credit-notes.store');
+    Route::post('/sales-invoices/{salesInvoice}/returns', [SalesCreditNoteController::class, 'storeReturn'])->name('sales-invoices.returns.store');
     Route::post('/clients/{client}/payments', [SalesPaymentController::class, 'store'])->name('clients.payments.store');
     Route::get('/clients/{client}/statement', [CustomerStatementController::class, 'show'])->name('clients.statement');
 
