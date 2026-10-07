@@ -26,6 +26,30 @@ class StockAdjustmentTest extends TestCase
         return $user;
     }
 
+    /**
+     * A typo'd/nonexistent product code used to pass validation silently,
+     * create an adjustment that matched no real Stock record, and do
+     * absolutely nothing on approval — no error, no stock change. It must
+     * now be rejected up front instead.
+     */
+    public function test_submitting_a_nonexistent_product_code_is_rejected(): void
+    {
+        $this->actingAsRole(User::ROLE_INVENTORY_MANAGER);
+
+        $response = $this->post('/stock-adjustments', [
+            'type' => StockAdjustment::TYPE_STOCK_TAKE,
+            'reason' => 'Typo test',
+            'items' => [[
+                'product_code' => 'DOES-NOT-EXIST',
+                'product_description' => 'Ghost Product',
+                'qty_counted' => 5,
+            ]],
+        ]);
+
+        $response->assertSessionHasErrors();
+        $this->assertSame(0, StockAdjustment::count());
+    }
+
     public function test_warehouse_user_can_submit_a_batch_level_stock_take_and_inventory_manager_can_approve_it(): void
     {
         $this->actingAsRole(User::ROLE_WAREHOUSE);

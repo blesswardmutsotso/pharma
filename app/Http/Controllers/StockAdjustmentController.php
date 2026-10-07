@@ -98,11 +98,13 @@ class StockAdjustmentController extends Controller implements HasMiddleware
             'reason' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_code' => ['required', 'string', 'max:100'],
+            'items.*.product_code' => ['required', 'string', 'max:100', 'exists:stocks,product_code'],
             'items.*.product_description' => ['required', 'string', 'max:255'],
             'items.*.batch_number' => ['nullable', 'string', 'max:100'],
             'items.*.expiry_date' => ['nullable', 'date'],
             'items.*.qty_counted' => ['required', 'integer', 'min:0'],
+        ], [
+            'items.*.product_code.exists' => 'One or more products are not in the catalogue — pick them from the search box so a typo can\'t silently create a no-op adjustment.',
         ]);
 
         // Found-stock lines (counted > what's actually in the batch system) that

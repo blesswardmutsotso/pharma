@@ -40,6 +40,7 @@
         </div>
 
         <div class="form-section-title">Lines</div>
+        <div class="form-text mb-2">Products must be picked from the catalogue below — typing a code that doesn't exist will be rejected on submit instead of silently doing nothing.</div>
         <div class="alert alert-light border small mb-3">
             Leave <strong>Batch Number</strong> blank to count against a product's total across all its batches.
             If what you counted is <strong>lower</strong> than the system total, the shortfall is removed from
@@ -51,18 +52,25 @@
             <table class="table table-sm" id="itemsTable">
                 <thead>
                     <tr>
-                        <th>Product Code</th>
+                        <th style="width:18%">Product Code</th>
                         <th>Product Description</th>
-                        <th>Batch Number</th>
-                        <th>Expiry Date (required if found stock is extra)</th>
-                        <th>Qty Counted</th>
+                        <th style="width:14%">Current System Qty</th>
+                        <th style="width:12%">Batch Number</th>
+                        <th style="width:14%">Expiry Date (required if found stock is extra)</th>
+                        <th style="width:10%">Qty Counted</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody id="itemsBody">
                     <tr>
-                        <td><input type="text" name="items[0][product_code]" class="form-control" required></td>
-                        <td><input type="text" name="items[0][product_description]" class="form-control" required></td>
+                        <td>
+                            <div class="product-search-wrap" style="position:relative;">
+                                <input type="text" name="items[0][product_code]" class="form-control product-search-input" autocomplete="off" placeholder="Search product…" required>
+                                <div class="product-search-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:#fff;border:1px solid #dee2e6;border-radius:6px;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+                            </div>
+                        </td>
+                        <td><input type="text" name="items[0][product_description]" class="form-control" readonly required></td>
+                        <td><input type="text" class="form-control system-qty-display" disabled placeholder="—"></td>
                         <td><input type="text" name="items[0][batch_number]" class="form-control"></td>
                         <td><input type="date" name="items[0][expiry_date]" class="form-control"></td>
                         <td><input type="number" name="items[0][qty_counted]" class="form-control" min="0" required></td>
@@ -104,12 +112,78 @@
             input.value = '';
             input.name = input.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
         });
+        row.querySelector('.product-search-results').style.display = 'none';
+        row.querySelector('.product-search-results').innerHTML = '';
         tbody.appendChild(row);
         itemIndex++;
         wireRemoveButtons();
     });
 
     wireRemoveButtons();
+
+    // ── Product search-as-you-type — same picker as GRN/Sales Orders, so a
+    // typo can never create a no-op adjustment against a nonexistent product.
+    let searchTimer = null;
+
+    function renderResultItem(p) {
+        return `
+            <div class="product-search-item" style="padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f1f3f5;"
+                 data-code="${p.product_code}" data-desc="${p.product_description}" data-qty="${p.quantity}">
+                <div class="fw-semibold">${p.product_code} — ${p.product_description}</div>
+                <div class="text-muted">System qty on hand: ${p.quantity}${p.quantity == 0 ? ' (depleted)' : ''}${p.batch_number ? ` &nbsp;·&nbsp; Next batch: ${p.batch_number} (exp ${p.expiry_date})` : ''}</div>
+            </div>
+        `;
+    }
+
+    tbody.addEventListener('input', (e) => {
+        if (!e.target.classList.contains('product-search-input')) return;
+
+        const input = e.target;
+        const resultsBox = input.closest('.product-search-wrap').querySelector('.product-search-results');
+        const query = input.value.trim();
+
+        clearTimeout(searchTimer);
+
+        if (query.length < 2) {
+            resultsBox.style.display = 'none';
+            resultsBox.innerHTML = '';
+            return;
+        }
+
+        searchTimer = setTimeout(() => {
+            fetch(`{{ route('products.search') }}?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(products => {
+                    if (!products.length) {
+                        resultsBox.innerHTML = '<div class="p-2 text-muted" style="font-size:.82rem;">No matching products — add it to the catalogue first</div>';
+                        resultsBox.style.display = 'block';
+                        return;
+                    }
+
+                    resultsBox.innerHTML = products.map(renderResultItem).join('');
+                    resultsBox.style.display = 'block';
+                });
+        }, 250);
+    });
+
+    tbody.addEventListener('click', (e) => {
+        const item = e.target.closest('.product-search-item');
+        if (!item) return;
+
+        const row = item.closest('tr');
+        row.querySelector('.product-search-input').value = item.dataset.code;
+        row.querySelector('[name$="[product_description]"]').value = item.dataset.desc;
+        row.querySelector('.system-qty-display').value = item.dataset.qty;
+
+        const resultsBox = item.closest('.product-search-results');
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.product-search-wrap')) return;
+        tbody.querySelectorAll('.product-search-results').forEach(box => box.style.display = 'none');
+    });
 })();
 </script>
 @endpush
