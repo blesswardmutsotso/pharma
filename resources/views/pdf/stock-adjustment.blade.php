@@ -25,7 +25,7 @@
 
 <div class="header">
     <div class="company-box">
-        <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="text-align:center;">
             @if (file_exists(public_path('logo.png')))
                 <img src="{{ public_path('logo.png') }}" class="company-logo">
             @endif
