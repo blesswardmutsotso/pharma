@@ -25,9 +25,12 @@
 
 <div class="header">
     <div class="company-box">
-        @if (file_exists(public_path('logo.png')))
-            <img src="{{ public_path('logo.png') }}" class="company-logo">
-        @endif
+        <div style="display:flex;flex-direction:column;align-items:center;">
+            @if (file_exists(public_path('logo.png')))
+                <img src="{{ public_path('logo.png') }}" class="company-logo">
+            @endif
+            <div style="font-size:8px;font-style:italic;color:#b80330;text-align:center;white-space:nowrap;margin-top:2px;">A Greater Vision. A Healthier World</div>
+        </div>
         <div>
             <div class="company">{{ config('company.name') }}</div>
             <div style="font-size:9px;color:#6c757d;">
