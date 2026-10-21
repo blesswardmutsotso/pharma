@@ -120,6 +120,53 @@ class MultiLocationInventoryTest extends TestCase
         $this->assertSame(10, $item->backorderedQty());
     }
 
+    /**
+     * Batches with no branch assigned (e.g. received before multi-location
+     * tracking was in use, or never explicitly assigned) must still be
+     * sellable from any branch — excluding them entirely would silently
+     * block a sale for stock that's genuinely on hand, which is what
+     * actually happened in production (QUV-FML01, Oct 2026).
+     */
+    public function test_sales_order_scoped_to_a_branch_can_allocate_unassigned_branchless_stock(): void
+    {
+        $this->actingAsAuthenticatedUser();
+        $mutare = $this->secondaryBranch();
+        $client = Client::create(['name' => 'Branchless Stock Client']);
+
+        Stock::factory()->create(['product_code' => 'ML-4', 'quantity' => 0]);
+
+        // Stock exists but was never assigned to any specific branch.
+        StockBatch::create([
+            'product_code' => 'ML-4',
+            'branch_id' => null,
+            'batch_number' => 'UNASSIGNED-BATCH',
+            'expiry_date' => now()->addYear(),
+            'qty_on_hand' => 10,
+            'unit_cost' => 1,
+            'status' => StockBatch::STATUS_ACTIVE,
+        ]);
+
+        $this->post('/sales-orders', [
+            'client_id' => $client->id,
+            'branch_id' => $mutare->id,
+            'currency' => 'USD',
+            'order_date' => now()->toDateString(),
+            'items' => [[
+                'product_code' => 'ML-4',
+                'product_description' => 'Branchless stock test product',
+                'qty_ordered' => 10,
+                'unit_price' => 5,
+            ]],
+        ]);
+
+        $so = SalesOrder::latest('id')->firstOrFail();
+        $this->post("/sales-orders/{$so->id}/confirm")->assertRedirect();
+
+        $item = $so->items()->first();
+        $this->assertSame(10, $item->qty_allocated);
+        $this->assertSame(0, $item->backorderedQty());
+    }
+
     public function test_outgoing_transfer_between_branches_moves_the_batch_and_preserves_its_identity(): void
     {
         $this->actingAsAuthenticatedUser();

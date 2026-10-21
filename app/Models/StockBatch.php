@@ -64,6 +64,22 @@ class StockBatch extends Model
         return $branchId === null ? $query : $query->where('branch_id', $branchId);
     }
 
+    /**
+     * Same as atBranch(), but also includes batches with no branch assigned
+     * at all — treated as unassigned/pooled stock that hasn't been tagged to
+     * a specific location yet, rather than stock that's unavailable. Used
+     * for actually allocating/selling stock, where excluding it would wrongly
+     * block a sale for product that's genuinely on hand. atBranch() itself
+     * stays strict for physical-count reconciliation (Stock Adjustments),
+     * where conflating "unassigned" with "definitely here" would be wrong.
+     */
+    public function scopeAvailableForBranch($query, ?int $branchId)
+    {
+        return $branchId === null
+            ? $query
+            : $query->where(fn ($q) => $q->where('branch_id', $branchId)->orWhereNull('branch_id'));
+    }
+
     public function scopeExpiringWithin($query, int $days)
     {
         return $query->whereDate('expiry_date', '>=', now()->toDateString())

@@ -29,7 +29,7 @@ class FefoAllocationService
         $branchId = $item->salesOrder?->branch_id;
 
         $remaining = $needed;
-        $batches = StockBatch::where('product_code', $item->product_code)->atBranch($branchId)->orderedForFefo()->get();
+        $batches = StockBatch::where('product_code', $item->product_code)->availableForBranch($branchId)->orderedForFefo()->get();
 
         foreach ($batches as $batch) {
             if ($remaining <= 0) {
@@ -58,7 +58,7 @@ class FefoAllocationService
     public function availableQtyFor(string $productCode, ?int $branchId = null): int
     {
         return (int) StockBatch::where('product_code', $productCode)
-            ->atBranch($branchId)
+            ->availableForBranch($branchId)
             ->active()
             ->get()
             ->sum(fn (StockBatch $batch) => $batch->availableQty());
