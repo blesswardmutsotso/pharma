@@ -32,11 +32,11 @@
 
 <div class="header">
     <div class="company-box">
-        <div style="text-align:center;">
+        <div>
             @if (file_exists(public_path('logo.png')))
                 <img src="{{ public_path('logo.png') }}" class="company-logo">
             @endif
-            <div style="font-size:8px;font-style:italic;color:#b80330;text-align:center;white-space:nowrap;margin-top:2px;">A Greater Vision. A Healthier World</div>
+            <div style="font-size:8px;font-style:italic;color:#b80330;white-space:nowrap;margin-top:2px;">A Greater Vision. A Healthier World</div>
         </div>
         <div>
             <div style="font-size:9px;color:#6c757d;">
