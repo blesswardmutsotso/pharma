@@ -96,7 +96,11 @@
                 </tbody>
             </table>
         </div>
-        <button type="button" id="addItemBtn" class="btn btn-outline-success btn-sm mb-3"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+        <div class="mb-3 d-flex gap-2">
+            <button type="button" id="addItemBtn" class="btn btn-outline-success btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+            <button type="button" id="addCustomItemBtn" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil-square me-1"></i>Add Custom Item</button>
+        </div>
+        <div class="form-text mb-3">Use <strong>Add Custom Item</strong> for anything not in the product catalogue — a service, delivery fee, or a one-off item — just describe it and set a price.</div>
 
         <div class="d-flex justify-content-end mb-3">
             <div style="min-width:280px;font-size:.85rem;">
@@ -182,19 +186,26 @@
         recalcSummary();
     }
 
+    // Captured once, from the page's original catalogue row — used as the
+    // template for every future catalogue row, regardless of what order rows
+    // end up in later (e.g. after a custom row is added or the first row removed).
+    const catalogRowTemplate = tbody.querySelector('tr').cloneNode(true);
+
     function addRow(prefill) {
-        // If the only row on the page is still completely blank, fill it in
-        // directly instead of leaving an empty row above the new one.
+        // If the only row on the page is still a completely blank catalogue
+        // row, fill it in directly instead of leaving an empty row above the
+        // new one.
         const firstRow = tbody.querySelector('tr');
+        const firstRowSearchInput = firstRow.querySelector('.product-search-input');
         const isFirstRowEmpty = tbody.querySelectorAll('tr').length === 1
-            && !firstRow.querySelector('[name$="[product_code]"]').value;
+            && firstRowSearchInput && !firstRowSearchInput.value;
 
         if (prefill && isFirstRowEmpty) {
             fillRow(firstRow, prefill);
             return;
         }
 
-        const row = firstRow.cloneNode(true);
+        const row = catalogRowTemplate.cloneNode(true);
         row.querySelectorAll('input').forEach(input => {
             if (input.classList.contains('discount-input')) {
                 input.value = '0';
@@ -220,6 +231,32 @@
     }
 
     document.getElementById('addItemBtn').addEventListener('click', () => addRow(null));
+
+    // ── Custom (non-catalogue) line items — a service, fee, or one-off item
+    // that isn't stocked. The backend only requires a code/description/qty/
+    // price, so this just skips the catalogue search entirely.
+    function addCustomRow() {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" name="items[${itemIndex}][product_code]" class="form-control" value="CUSTOM-${itemIndex}" placeholder="Reference"></td>
+            <td><input type="text" name="items[${itemIndex}][product_description]" class="form-control" placeholder="Describe the item or service" required></td>
+            <td><input type="text" class="form-control" disabled placeholder="—"></td>
+            <td><input type="text" class="form-control" disabled placeholder="—"></td>
+            <td><input type="number" name="items[${itemIndex}][qty]" class="form-control qty-input" min="1" value="1" required></td>
+            <td><input type="number" step="0.01" name="items[${itemIndex}][unit_price]" class="form-control unit-price-input" min="0" required></td>
+            <td><input type="number" step="0.01" name="items[${itemIndex}][discount]" class="form-control discount-input" min="0" value="0"></td>
+            <td><input type="text" class="form-control total-display" disabled value="0.00"></td>
+            <td><button type="button" class="btn-action remove-row" title="Remove"><i class="bi bi-trash"></i></button></td>
+        `;
+        row.classList.add('table-warning');
+
+        tbody.appendChild(row);
+        itemIndex++;
+        wireRemoveButtons();
+        recalcSummary();
+    }
+
+    document.getElementById('addCustomItemBtn').addEventListener('click', addCustomRow);
 
     wireRemoveButtons();
     recalcSummary();
