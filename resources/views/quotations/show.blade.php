@@ -11,6 +11,9 @@
             <div class="sub"><span class="badge-status badge-{{ $quotation->status }}">{{ ucfirst($quotation->status) }}</span></div>
         </div>
         <div class="d-flex gap-2">
+            @if ($quotation->status !== \App\Models\Quotation::STATUS_CONVERTED)
+                <a href="{{ route('quotations.edit', $quotation) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+            @endif
             <a href="{{ route('quotations.pdf', $quotation) }}" target="_blank" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Print PDF</a>
             <a href="{{ route('quotations.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
         </div>

@@ -128,7 +128,7 @@ Route::middleware(['auth', 'verified', 'password.fresh'])->group(function () {
 
     // ── Sales orders, quotations & FEFO picking ──
     Route::post('/quotations/export', [QuotationController::class, 'export'])->name('quotations.export');
-    Route::resource('quotations', QuotationController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('quotations', QuotationController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     Route::post('/quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
     Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
 

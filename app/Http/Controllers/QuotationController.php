@@ -24,7 +24,7 @@ class QuotationController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin,manager,sales', only: ['create', 'store', 'convert']),
+            new Middleware('role:admin,manager,sales', only: ['create', 'store', 'edit', 'update', 'convert']),
         ];
     }
 
@@ -137,6 +137,71 @@ class QuotationController extends Controller implements HasMiddleware
         $quotation->load(['client', 'items', 'convertedSalesOrder']);
 
         return view('quotations.show', compact('quotation'));
+    }
+
+    public function edit(Quotation $quotation)
+    {
+        if ($quotation->status === Quotation::STATUS_CONVERTED) {
+            return redirect()->route('quotations.show', $quotation)
+                ->with('error', 'This quotation has already been converted to a sales order and can no longer be edited.');
+        }
+
+        $quotation->load('items');
+        $clients = Client::orderBy('name')->limit(200)->get();
+        $zwgRate = ExchangeRate::rateFor('ZWG');
+
+        return view('quotations.edit', compact('quotation', 'clients', 'zwgRate'));
+    }
+
+    public function update(Request $request, Quotation $quotation)
+    {
+        if ($quotation->status === Quotation::STATUS_CONVERTED) {
+            return redirect()->route('quotations.show', $quotation)
+                ->with('error', 'This quotation has already been converted to a sales order and can no longer be edited.');
+        }
+
+        $validated = $request->validate([
+            'client_id' => ['required', 'exists:clients,id'],
+            'currency' => ['required', 'in:USD,ZWG'],
+            'quote_date' => ['required', 'date'],
+            'valid_until' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_code' => ['required', 'string'],
+            'items.*.product_description' => ['required', 'string'],
+            'items.*.qty' => ['required', 'integer', 'min:1'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($validated, $quotation) {
+            $quotation->update([
+                'client_id' => $validated['client_id'],
+                'currency' => $validated['currency'],
+                'quote_date' => $validated['quote_date'],
+                'valid_until' => $validated['valid_until'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $quotation->items()->delete();
+
+            foreach ($validated['items'] as $item) {
+                $discount = (float) ($item['discount'] ?? 0);
+                $lineTotal = round(((float) $item['qty'] * (float) $item['unit_price']) - $discount, 2);
+
+                QuotationItem::create([
+                    'quotation_id' => $quotation->id,
+                    'product_code' => $item['product_code'],
+                    'product_description' => $item['product_description'],
+                    'qty' => $item['qty'],
+                    'unit_price' => $item['unit_price'],
+                    'discount' => $discount,
+                    'line_total' => $lineTotal,
+                ]);
+            }
+        });
+
+        return redirect()->route('quotations.show', $quotation)->with('success', 'Quotation updated successfully.');
     }
 
     public function pdf(Request $request, Quotation $quotation)
